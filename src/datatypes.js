@@ -39,6 +39,7 @@
      * given transforms.
      */
     var pos_concat = function(pos1, pos2) {
+        if (pos1 === undefined) return pos2;
         var cos = pos1.s * Math.cos(pos1.o);
         var sin = pos1.s * Math.sin(pos1.o);
         return {
@@ -56,10 +57,22 @@
         var cos = Math.cos(pos.o)/pos.s;
         var sin = Math.sin(pos.o)/pos.s;
         return {
-            x: -cos*pos.x-sin*pos.y,
-            y: sin*pos.x-cos*pos.y,
+            x: -cos*pos.x - sin*pos.y,
+            y: sin*pos.x - cos*pos.y,
             o: -pos.o,
             s: 1.0 / pos.s
+        };
+    };
+
+    /**
+     * Returns the given x,y position transformed by the given POS.
+     */
+    var pos_transform = function(pos, xy) {
+        var cos = pos.s*Math.cos(pos.o);
+        var sin = pos.s*Math.sin(pos.o);
+        return {
+            x: cos*xy.x - sin*xy.y + pos.x,
+            y: sin*xy.x + cos*xy.y + pos.y
         };
     };
 
@@ -70,7 +83,7 @@
     var pos_set_transform = function(pos, c) {
         var cos = pos.s*Math.cos(pos.o);
         var sin = pos.s*Math.sin(pos.o);
-        c.setTransform(cos, -sin, sin, cos, pos.x, pos.y);
+        c.setTransform(cos, sin, -sin, cos, pos.x, pos.y);
     };
 
     // ----------------------------------------------------------------------
@@ -103,6 +116,7 @@
         pos_create: pos_create,
         pos_concat: pos_concat,
         pos_invert: pos_invert,
+        pos_transform: pos_transform,
         pos_set_transform: pos_set_transform,
 
         aabb_create: aabb_create

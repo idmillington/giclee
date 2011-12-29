@@ -20,16 +20,8 @@
                 // Record that we've loaded this.
                 _image_load_cache[crc] = true;
 
-                // TOdO: Do something with it.
+                // TODO: Do something with it.
             }
-        );
-    };
-
-    var _resize_manager;
-    var init_resize_manager = function() {
-        _resize_manager = gce.managers.ResizeManager.create(
-            $("#canvas"),
-            $(window)
         );
     };
 
@@ -40,12 +32,29 @@
         viewer = gce.viewer.Viewer.create($("#canvas"), document);
     }
 
+    var _resize_manager;
+    var init_resize_manager = function() {
+        _resize_manager = gce.managers.ResizeManager.create(
+            $("#canvas"),
+            $(window),
+            function() { if (viewer !== undefined) viewer.draw(); }
+        );
+    };
+
+
     /**
      * Top level initialization.
      */
     var init = function() {
         init_resize_manager();
         init_viewer();
+
+        $("#canvas").click(function(event) {
+            console.log(event.offsetX, event.offsetY, viewer.get_renderers_at({
+                x:event.offsetX,
+                y:event.offsetY
+            }));
+        });
 
         // init_image_drop_manager();
     };
