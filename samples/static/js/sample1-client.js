@@ -28,28 +28,26 @@
     var _resize_manager;
     var init_resize_manager = function() {
         _resize_manager = gce.managers.ResizeManager.create(
-            $canvas,
+            $("#canvas"),
             $(window)
         );
     };
 
-    /**
-     * Creates the context for drawing on the canvas.
-     */
-    var $canvas;
-    var c;
-    var init_canvas = function() {
-        $canvas = $("#canvas");
-        c = $canvas.get(0).getContext('2d');
-    };
+    var document;
+    var viewer;
+    var init_viewer = function() {
+        document = gce.document.Document.create();
+        viewer = gce.viewer.Viewer.create($("#canvas"), document);
+    }
 
     /**
      * Top level initialization.
      */
     var init = function() {
-        init_canvas();
         init_resize_manager();
-        init_image_drop_manager();
+        init_viewer();
+
+        // init_image_drop_manager();
     };
 
     $(init);

@@ -65,6 +65,26 @@
     };
 
     /**
+     * To hold local data, we use names beginning with '-', this
+     * removes them.
+     */
+    var object_clear_cache = function(target) {
+        // Compile a list of keys to remove, so we don't try to
+        // iterate through keys while we delete them. This may be
+        // implementation dependent.
+        var to_remove = [];
+        for (var key in target) {
+            if (key.substring(0,1) == '-') {
+                to_remove.push(key);
+            }
+        }
+        // Remove the keys we compiled.
+        for (var i = 0; i < to_remove.length; i++) {
+            delete target[to_remove[i]];
+        }
+    };
+
+    /**
      * Performs a deep copy on the JSON-compatible object.
      */
     var deep_copy = function(object) {
@@ -213,7 +233,6 @@
         return result & 0xffffff;
     };
 
-
     // --------------------------------------------------------------------
     // API
     // --------------------------------------------------------------------
@@ -225,13 +244,14 @@
 
         object_concat: object_concat,
         object_subset: object_subset,
+        object_clear_cache: object_clear_cache,
         deep_copy: deep_copy,
 
         augment_function: augment_function,
 
         uuid4: uuid4,
         utf8encode: utf8encode,
-        crc32: crc32
+        crc32: crc32,
     };
 
 })(jQuery)
