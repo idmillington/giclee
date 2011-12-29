@@ -118,7 +118,7 @@
     var ImageDropManager = inherit(ObjectBase);
 
     /**
-     * Manages drag and drop for images.
+     * Manages drag and drop for images on the given container.
      */
     ImageDropManager.init = function($container, drop_callback) {
         this.$container = $container;
@@ -141,6 +141,10 @@
         return false;
     };
 
+    /**
+     * Handles a drop event, extracts the images and notifies the
+     * callback.
+     */
     ImageDropManager.drop = function(event) {
         // Make sure we stop if we crash.
         event.preventDefault();
@@ -224,7 +228,8 @@
         if (this.lastSize.w != w || this.lastSize.h != h) {
             this.lastSize.w = w;
             this.lastSize.h = h;
-            this.$resize.width(w).height(h).attr({width: w, height: h});
+            var wh = {width: w, height: h};
+            this.$resize.width(w).height(h).attr(wh).css(wh);
             if (this.callback) this.callback(w, h);
         }
     };
