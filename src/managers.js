@@ -3,6 +3,8 @@
     var ObjectBase = gce.utils.ObjectBase;
     var inherit = gce.utils.inherit;
 
+    var pos_copy = gce.datatypes.pos_copy;
+
     // --------------------------------------------------------------------
     // Manages loading images in batches and cachine the results.
     // --------------------------------------------------------------------
@@ -255,6 +257,201 @@
     };
 
     // --------------------------------------------------------------------
+    // A drag manager allows dragging to affect a POS.
+    // --------------------------------------------------------------------
+
+    var DragManager = inherit(ObjectBase);
+
+    DragManager.init = function() {
+        this.rotate_scale_override = false;
+
+        this.lock_position = false;
+        this.lock_orientation = false;
+        this.lock_scale = false;
+
+        this.touch_lookup = {};
+        this.active_touches = 0;
+    };
+
+    /**
+     * Commits the drag data as if any dragging began at the current
+     * state. This needs to be done when the kinds of dragging changes
+     * (when we get more touches, for example, or when the
+     * rotate-scale override changes). It shouldn't be done for every
+     * change, since that way numerical errors are quickly compounded.
+     */
+    DragManager._commit = function() {
+        // First update.
+        this._update();
+
+        // Set the initial position to be the current position.
+        this.initial_pos = pos_copy(this.pos);
+
+        // Now go through all touches and make the inital be the current.
+        for (var id in this.touch_lookup) {
+            var touch_data = this.touch_lookup[id];
+            touch_data.initial.x = touch_data.current.x;
+            touch_data.initial.y = touch_data.current.y;
+        }
+    };
+
+    /**
+     * Processes the current update data and sets the this.pos field
+     * accordingly.
+     */
+    DragManager._update = function() {
+        switch (this.active_touches) {
+        case 0:
+            break;
+
+        case 1:
+            if (this.rotate_scale_override) {
+                // We're doing a rotate-scale update.
+                this._update_orientation_scale();
+            } else {
+                // Update translation.
+                this._update_position();
+            }
+            break;
+
+        case 2:
+            // We have two touches, allowing us to get all the data at once.
+            this._update_position_orientation_scale();
+            break;
+
+        default:
+            // We're over-specified, so ignore it for now.
+            break;
+        }
+    };
+
+    /**
+     * Processes the single touch as a position change.
+     */
+    DragManager._update_position = function() {
+        if (this.lock_position) return;
+
+        for (var id in this.touch_lookup) {
+            var touch_data = this.touch_lookup[id];
+            var initial = this.initial_pos;
+            this.pos.x = initial.x + touch_data.current.x-touch_data.initial.x;
+            this.pos.y = initial.y + touch_data.current.y-touch_data.initial.y;
+
+            // We should have only one entry, but to be safe exit
+            // explicitly.
+            break;
+        }
+    };
+
+    /**
+     * Processes the single touch as an orientation/scale change.
+     */
+    DragManager._update_orientation_scale = function() {
+        if (this.lock_orientation && this.lock_scale) return;
+
+        for (var id in this.touch_lookup) {
+            var touch_data = this.touch_lookup[id];
+            var origin = this.origin_xy;
+            var initial = this.initial_pos;
+
+            var dx = touch_data.current.x - origin.x;
+            var dy = touch_data.current.y - origin.y;
+            var ox = touch_data.initial.x - origin.x;
+            var oy = touch_data.initial.y - origin.y;
+
+            if (!this.lock_orientation) {
+                var current_angle = Math.atan2(dy, dx);
+                var initial_angle = Math.atan2(oy, ox);
+                this.pos.o = initial.o + (current_angle - initial_angle);
+            }
+
+            if (!this.lock_scale      ) {
+                var delta_scale = Math.sqrt(dx*dx+dy*dy)/Math.sqrt(ox*ox+oy*oy);
+                this.pos.s = initial.s * delta_scale;
+            }
+
+
+            // We should have only one entry, but to be safe exit
+            // explicitly.
+            break;
+        }
+    };
+
+    /**
+     * Sets the current pos for the thing we're dragging. Normally
+     * this is done before any touches are recognized.
+     */
+    DragManager.set_pos = function(pos, origin_xy, transform_origin) {
+        this.initial_pos = pos_copy(pos);
+        this.pos = pos_copy(pos);
+
+        this.origin_xy = {x:origin_xy.x, y:origin_xy.y};
+        this.transform_origin = transform_origin;
+
+        this._commit();
+    };
+
+    /**
+     * We can do rotation/scale with a single touch if this is
+     * set. Normally on platforms without multitouch this is done with
+     * another control (such as a modifier key).
+     */
+    DragManager.set_rotate_scale_override = function(bool) {
+        if (this.rotate_scale_override != bool) {
+            this._commit();
+            this.rotate_scale_override = bool;
+        }
+    };
+
+    /**
+     * Sets the locks on what can be changed.
+     */
+    DragManager.set_locks = function(position, orientation, scale) {
+        this._commit();
+        this.lock_position = position;
+        this.lock_orientation = orientation;
+        this.lock_scale = scale;
+    };
+
+    /**
+     * Notifies that the touch with the given id (a string, or
+     * something that can be converted to a string uniquely) has begun
+     * at the given x,y location.
+     */
+    DragManager.start_touch = function(id, xy) {
+        // Create drag data to represent this drag.
+        var touch_data = {
+            initial: xy,
+            current: xy
+        };
+        this.touch_lookup[id] = touch_data;
+        this.active_touches++;
+        this._commit();
+    };
+
+    /**
+     * Notifies that the touch with the given id has moved to the
+     * given location.
+     */
+    DragManager.move_touch = function(id, xy) {
+        var touch_data = this.touch_lookup[id];
+        touch_data.current = xy;
+        this._update();
+    };
+
+    /**
+     * Notifies that the touch with the given id has lifted from the
+     * given location.
+     */
+    DragManager.end_touch = function(id, xy) {
+        // Just end the touch, delegate to move to do any updates first.
+        this.move_touch(id, xy);
+        delete this.touch_lookup[id];
+        this.active_touches--;
+        this._commit();
+    };
+
+    // --------------------------------------------------------------------
     // API
     // --------------------------------------------------------------------
 
@@ -262,7 +459,8 @@
     window.gce.managers = {
         ImageManager: ImageManager,
         ImageDropManager: ImageDropManager,
-        ResizeManager: ResizeManager
+        ResizeManager: ResizeManager,
+        DragManager: DragManager
     }
 
 })(jQuery);

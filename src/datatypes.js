@@ -35,6 +35,13 @@
     };
 
     /**
+     * Returns a new copy of the given pos.
+     */
+    var pos_copy = function(pos) {
+        return {x:pos.x, y:pos.y, o:pos.o, s:pos.s};
+    };
+
+    /**
      * Returns a new POS which represents the combination of the two
      * given transforms.
      */
@@ -114,6 +121,7 @@
     if (window.gce === undefined) window.gce = {};
     window.gce.datatypes = {
         pos_create: pos_create,
+        pos_copy: pos_copy,
         pos_concat: pos_concat,
         pos_invert: pos_invert,
         pos_transform: pos_transform,

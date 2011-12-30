@@ -6,10 +6,13 @@
     var aabb_create = gce.datatypes.aabb_create;
 
     var pos_create = gce.datatypes.pos_create;
+    var pos_copy = gce.datatypes.pos_copy;
     var pos_concat = gce.datatypes.pos_concat;
     var pos_invert = gce.datatypes.pos_invert;
     var pos_transform = gce.datatypes.pos_transform;
     var pos_set_transform = gce.datatypes.pos_set_transform;
+
+    var DragManager = gce.managers.DragManager;
 
     // ----------------------------------------------------------------------
     // Platform dependency shims
@@ -89,8 +92,7 @@
      * object.
      */
     Renderer.render_local_coords = function(c, pos_stack, local_bounds) {
-        c.rect(-50, -50, 100, 100);
-        c.fill();
+        c.fillRect(-50, -50, 100, 100);
     };
 
     /**
@@ -159,6 +161,34 @@
      * Initializes events.
      */
     Viewer._init_events = function() {
+        var that = this;
+        this.$canvas.mousedown(function(event) {
+            var w = that.$canvas.width(), h = that.$canvas.height();
+
+            var dm = DragManager.create();
+            dm.set_pos(that.pos, {x:w*0.5, y:h*0.5}, false);
+            dm.set_locks(false, true, false);
+            dm.set_rotate_scale_override(event.shiftKey);
+            dm.start_touch(1, {x:event.offsetX, y:event.offsetY});
+
+            var move = function(event) {
+                dm.set_rotate_scale_override(event.shiftKey);
+                dm.move_touch(1, {x:event.offsetX, y:event.offsetY});
+
+                that.pos = pos_copy(dm.pos);
+                that.draw();
+                //console.log(JSON.stringify(dm.pos));
+            };
+            var up = function(event) {
+                dm.end_touch(1, {x:event.offsetX, y:event.offsetY});
+
+                that.$canvas.unbind('mousemove', move);
+                that.$canvas.unbind('mouseup', up);
+            };
+
+            that.$canvas.bind('mousemove', move);
+            that.$canvas.bind('mouseup', up);
+        });
     };
 
     /**
@@ -213,6 +243,7 @@
     Viewer.draw = function() {
         var c = this.c;
         var w = this.$canvas.width(), h = this.$canvas.height();
+
         c.setTransform(1, 0, 0, 1, 0, 0);
         this.redraw(0, 0, w, h);
     };

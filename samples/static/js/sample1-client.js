@@ -49,13 +49,6 @@
         init_resize_manager();
         init_viewer();
 
-        $("#canvas").click(function(event) {
-            console.log(event.offsetX, event.offsetY, viewer.get_renderers_at({
-                x:event.offsetX,
-                y:event.offsetY
-            }));
-        });
-
         // init_image_drop_manager();
     };
 
