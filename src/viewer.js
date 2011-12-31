@@ -1,7 +1,6 @@
 (function($) {
     // Import
     var ObjectBase = gce.utils.ObjectBase;
-    var inherit = gce.utils.inherit;
 
     var aabb_create = gce.datatypes.aabb_create;
 
@@ -46,7 +45,7 @@
     // --------------------------------------------------------------------
     // Renderers are used to display object.
     // --------------------------------------------------------------------
-    var Renderer = inherit(ObjectBase);
+    var Renderer = ObjectBase.extend();
 
     /**
      * Creates a renderer for the given element. If any recursively
@@ -133,7 +132,7 @@
     // The viewer displays a document on a canvas.
     // --------------------------------------------------------------------
 
-    var Viewer = inherit(ObjectBase);
+    var Viewer = ObjectBase.extend();
 
     /**
      * Creates a new viewer to connect the given canvas to the given
@@ -177,8 +176,8 @@
 
                 that.pos = pos_copy(dm.pos);
                 that.draw();
-                //console.log(JSON.stringify(dm.pos));
             };
+
             var up = function(event) {
                 dm.end_touch(1, {x:event.offsetX, y:event.offsetY});
 

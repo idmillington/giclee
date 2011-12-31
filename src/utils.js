@@ -4,34 +4,40 @@
     // ----------------------------------------------------------------------
 
     /**
-     * Creates a new derived object from the given original object
-     * (Crockford's object() function).
-     */
-    var inherit = function(prototype) {
-	function Constructor() {}
-	Constructor.prototype = prototype;
-	return new Constructor();
-    };
-
-    /**
      * A generic root base object that provides a simpler way to
      * create inheritance chains.
      */
     var ObjectBase = {
+        /**
+         * Constructs a new instance of this (or a derived) object,
+         * calling an 'init' method with the same arguments passed to
+         * the constructor. So "DerivedObject.create(...)" replaces
+         * "new DerivedObject(...)". Note that 'init' functions do not
+         * get called up the chain automatically, derived objects
+         * should explicitly call any parent init functions they need.
+         */
 	create: function() {
-            var self = inherit(this);
+            var self = this.extend();
             this.init.apply(self, arguments);
             return self;
-	}
-    };
+	},
 
-    /**
-     * Make sure we have the ECMA script Object.create method (which
-     * is our inherit method).
-     */
-    if (typeof Object.create !== 'function') {
-        Object.create = inherit;
-    }
+        /**
+         * Empty init function, in case none is needed.
+         */
+        init: function() {
+        },
+
+        /**
+         * Creates a new object derived from this one (basically
+         * Crockford's object() function).
+         */
+        extend: function() {
+	    function Constructor() {}
+	    Constructor.prototype = this;
+	    return new Constructor();
+        }
+    };
 
     // ----------------------------------------------------------------------
     // Object manipuation
@@ -240,7 +246,6 @@
     if (window.gce === undefined) window.gce = {};
     window.gce.utils = {
         ObjectBase: ObjectBase,
-        inherit: inherit,
 
         object_concat: object_concat,
         object_subset: object_subset,

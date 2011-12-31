@@ -1,13 +1,12 @@
 (function($) {
     // Import
     var ObjectBase = gce.utils.ObjectBase;
-    var inherit = gce.utils.inherit;
 
     // --------------------------------------------------------------------
     // The document contains the data to display.
     // --------------------------------------------------------------------
 
-    var Document = inherit(ObjectBase);
+    var Document = ObjectBase.extend();
 
     /**
      * Creates a new document with the given raw content.

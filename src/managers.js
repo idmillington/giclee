@@ -1,7 +1,6 @@
 (function($) {
     // Import
     var ObjectBase = gce.utils.ObjectBase;
-    var inherit = gce.utils.inherit;
 
     var pos_copy = gce.datatypes.pos_copy;
 
@@ -9,7 +8,7 @@
     // Manages loading images in batches and cachine the results.
     // --------------------------------------------------------------------
 
-    var ImageManager = inherit(ObjectBase);
+    var ImageManager = ObjectBase.extend();
 
     /**
      * ImageManagers represent a set of images that need to be
@@ -117,7 +116,7 @@
     // An image drop manager allows images to be dropped on a container.
     // --------------------------------------------------------------------
 
-    var ImageDropManager = inherit(ObjectBase);
+    var ImageDropManager = ObjectBase.extend();
 
     /**
      * Manages drag and drop for images on the given container.
@@ -194,7 +193,7 @@
     // A resize manager keeps a target the same size as a container.
     // --------------------------------------------------------------------
 
-    var ResizeManager = inherit(ObjectBase);
+    var ResizeManager = ObjectBase.extend();
 
     /**
      * Manages keeping a DOM element resized to the size of a given
@@ -260,7 +259,7 @@
     // A drag manager allows dragging to affect a POS.
     // --------------------------------------------------------------------
 
-    var DragManager = inherit(ObjectBase);
+    var DragManager = ObjectBase.extend();
 
     DragManager.init = function() {
         this.rotate_scale_override = false;
@@ -365,7 +364,7 @@
                 this.pos.o = initial.o + (current_angle - initial_angle);
             }
 
-            if (!this.lock_scale      ) {
+            if (!this.lock_scale) {
                 var delta_scale = Math.sqrt(dx*dx+dy*dy)/Math.sqrt(ox*ox+oy*oy);
                 this.pos.s = initial.s * delta_scale;
             }
