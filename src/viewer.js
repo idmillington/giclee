@@ -18,6 +18,24 @@
     // ----------------------------------------------------------------------
 
     /**
+     * Animation can be synched to the platform refresh rate, but in a
+     * platform-dependent way.
+     */
+    (function() {
+        if (!window.requestAnimationFrame) {
+            window.requestAnimationFrame = (
+                window.webkitRequestAnimationFrame ||
+                window.mozRequestAnimationFrame ||
+                window.oRequestAnimationFrame ||
+                window.msRequestAnimationFrame ||
+                function(callback) {
+                    window.setTimeout(callback, 1000 / 60);
+                }
+            );
+        }
+    })();
+
+    /**
      * Test for and correct Mozilla's PointInPath bug (credit:
      * stackoverflow).
      */
@@ -43,7 +61,7 @@
     })();
 
     // --------------------------------------------------------------------
-    // Renderers are used to display object.
+    // Renderers are used to display objects.
     // --------------------------------------------------------------------
     var Renderer = ObjectBase.extend();
 
