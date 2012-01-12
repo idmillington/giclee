@@ -2,14 +2,14 @@
     // Import
     var ObjectBase = gce.utils.ObjectBase;
 
-    var aabb_create = gce.datatypes.aabb_create;
+    var aabbCreate = gce.datatypes.aabbCreate;
 
-    var pos_create = gce.datatypes.pos_create;
-    var pos_copy = gce.datatypes.pos_copy;
-    var pos_concat = gce.datatypes.pos_concat;
-    var pos_invert = gce.datatypes.pos_invert;
-    var pos_transform = gce.datatypes.pos_transform;
-    var pos_set_transform = gce.datatypes.pos_set_transform;
+    var posCreate = gce.datatypes.posCreate;
+    var posCopy = gce.datatypes.posCopy;
+    var posConcat = gce.datatypes.posConcat;
+    var posInvert = gce.datatypes.posInvert;
+    var posTransform = gce.datatypes.posTransform;
+    var posSetTransform = gce.datatypes.posSetTransform;
 
     var DragManager = gce.managers.DragManager;
 
@@ -68,9 +68,9 @@
     /**
      * Creates a renderer for the given element. If any recursively
      * nested elements also need their own renderers, then the given
-     * get_renderer function can be called to provide them.
+     * getRenderer function can be called to provide them.
      */
-    Renderer.init = function(parent, element, get_renderer) {
+    Renderer.init = function(parent, element, getRenderer) {
         this.parent = parent;
         this.element = element;
     };
@@ -79,26 +79,26 @@
      * Renders this object to the given context. This is normally not
      * overridden, since it provides top level support for things like
      * in-bounds detection, Position-Orientation-Scale and
-     * filters. Instead, override the render_local_coords function.
+     * filters. Instead, override the renderLocalCoords function.
      */
-    Renderer.render_global_coords = function(c, pos_stack, global_bounds) {
+    Renderer.renderGlobalCoords = function(c, posStack, globalBounds) {
         var pos = this.element.pos;
-        pos = pos_concat(pos_stack[0], pos);
+        pos = posConcat(posStack[0], pos);
 
         // TODO: Calculate the local bounds from the transform and
         // global bounds.
-        var local_bounds = undefined;
+        var localBounds = undefined;
 
         // Set the transform.
         c.save();
-        pos_stack.unshift(pos);
-        pos_set_transform(pos, c);
+        posStack.unshift(pos);
+        posSetTransform(pos, c);
 
         // Draw the object.
-        this.render_local_coords(c, pos_stack, local_bounds);
+        this.renderLocalCoords(c, posStack, localBounds);
 
         // Remove the transform.
-        pos_stack.shift();
+        posStack.shift();
         c.restore();
 
         // TODO: Handle filters.
@@ -108,7 +108,7 @@
      * Override this function to do the actual rendering for this
      * object.
      */
-    Renderer.render_local_coords = function(c, pos_stack, local_bounds) {
+    Renderer.renderLocalCoords = function(c, posStack, localBounds) {
         c.fillRect(-50, -50, 100, 100);
     };
 
@@ -118,21 +118,21 @@
      * or can use click areas that are different from their rendering
      * envelope. By default this method performs global to local
      * transform on the given point, then calls
-     * is_local_point_in_object. In most cases, however, there are
+     * isLocalPointInObject. In most cases, however, there are
      * better ways to calculate the same thing.
      */
-    Renderer.is_global_point_in_object = function(c, pos_stack, global_point) {
+    Renderer.isGlobalPointInObject = function(c, posStack, globalPoint) {
         var pos = this.element.pos;
-        pos = pos_concat(pos_stack[0], pos);
+        pos = posConcat(posStack[0], pos);
 
         // Calculate the local point.
-        var global_to_local = pos_invert(pos);
-        var local_point = pos_transform(global_to_local, global_point);
+        var globalToLocal = posInvert(pos);
+        var localPoint = posTransform(globalToLocal, globalPoint);
 
         // Calculate the result.
-        pos_stack.unshift(pos);
-        var result = this.is_local_point_in_object(c, pos_stack, local_point);
-        pos_stack.shift();
+        posStack.unshift(pos);
+        var result = this.isLocalPointInObject(c, posStack, localPoint);
+        posStack.shift();
         return result;
     };
 
@@ -141,8 +141,8 @@
      * is in this object. This should be overridden, unless the global
      * version is overridden.
      */
-    Renderer.is_local_point_in_object = function(c, pos_stack, local_point) {
-        var x = local_point.x, y = local_point.y;
+    Renderer.isLocalPointInObject = function(c, posStack, localPoint) {
+        var x = localPoint.x, y = localPoint.y;
         return x > -50 && x < 50 && y > -50 && y < 50;;
     };
 
@@ -165,11 +165,11 @@
         this.canvas = $canvas.get(0);
         this.c = this.canvas.getContext("2d");
 
-        this.pos = pos_create();
+        this.pos = posCreate();
         this.document = document;
 
-        this._init_renderers(renderers);
-        this._init_events();
+        this._initRenderers(renderers);
+        this._initEvents();
 
         this.draw();
     };
@@ -177,27 +177,27 @@
     /**
      * Initializes events.
      */
-    Viewer._init_events = function() {
+    Viewer._initEvents = function() {
         var that = this;
         this.$canvas.mousedown(function(event) {
             var w = that.$canvas.width(), h = that.$canvas.height();
 
             var dm = DragManager.create();
-            dm.set_pos(that.pos, {x:w*0.5, y:h*0.5}, false);
-            dm.set_locks(false, true, false);
-            dm.set_rotate_scale_override(event.shiftKey);
-            dm.start_touch(1, {x:event.offsetX, y:event.offsetY});
+            dm.setPos(that.pos, {x:w*0.5, y:h*0.5}, false);
+            dm.setLocks(false, true, false);
+            dm.setRotateScaleOverride(event.shiftKey);
+            dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
 
             var move = function(event) {
-                dm.set_rotate_scale_override(event.shiftKey);
-                dm.move_touch(1, {x:event.offsetX, y:event.offsetY});
+                dm.setRotateScaleOverride(event.shiftKey);
+                dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
 
-                that.pos = pos_copy(dm.pos);
+                that.pos = posCopy(dm.pos);
                 that.draw();
             };
 
             var up = function(event) {
-                dm.end_touch(1, {x:event.offsetX, y:event.offsetY});
+                dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
 
                 that.$canvas.unbind('mousemove', move);
                 that.$canvas.unbind('mouseup', up);
@@ -211,13 +211,16 @@
     /**
      * Initializes the renderer lookup.
      */
-    Viewer._init_renderers = function(renderers) {
+    Viewer._initRenderers = function(renderers) {
         /*
          * Create a local function that can retrieve a valid renderer
-         * for the given element.
+         * for the given element. This needs to be a local function
+         * (rather than declaring a Viewer.getRenderer function)
+         * because we need to pass it to renderers, with lexical
+         * scoping intact, so they can created nested elements.
          */
         var that = this;
-        var get_renderer = function(element) {
+        var getRenderer = function(element) {
             // Try to find a cached renderer.
             var renderer = element["-renderer"];
             if (renderer === undefined) {
@@ -229,7 +232,7 @@
                 }
 
                 // Instantiate it.
-                renderer = RendererType.create(that, element, get_renderer);
+                renderer = RendererType.create(that, element, getRenderer);
 
                 // Cache it.
                 element["-renderer"] = renderer;
@@ -240,7 +243,7 @@
 
         // Store the renderers and the function.
         this.renderers = renderers || {"$default":Renderer};
-        this.get_renderer = get_renderer;
+        this.getRenderer = getRenderer;
     };
 
     /**
@@ -248,7 +251,7 @@
      * internal POS field, and the dimensions of the canvas, such that
      * the position in that POS field appears at the center of the canvas.
      */
-    Viewer.get_view_pos = function() {
+    Viewer.getViewPos = function() {
         var pos = this.pos;
         var w = this.$canvas.width(), h = this.$canvas.height();
         return {x:w*0.5+pos.x, y:h*0.5+pos.y, o:pos.o, s:pos.s};
@@ -272,14 +275,14 @@
         var c = this.c;
         c.clearRect(x, y, w, h);
 
-        var pos_stack = [this.get_view_pos()];
-        var aabb = aabb_create(x, y, w, h);
+        var posStack = [this.getViewPos()];
+        var aabb = aabbCreate(x, y, w, h);
 
         var content = this.document.content;
         for (var i = 0; i < content.length; i++) {
             var element = content[i];
-            var renderer = this.get_renderer(element);
-            renderer.render_global_coords(c, pos_stack, aabb);
+            var renderer = this.getRenderer(element);
+            renderer.renderGlobalCoords(c, posStack, aabb);
         }
     };
 
@@ -287,16 +290,16 @@
      * Returns the renderers of the objects at the given global
      * coordinates.
      */
-    Viewer.get_renderers_at = function(xy) {
-        var pos_stack = [this.get_view_pos()];
+    Viewer.getRenderersAt = function(xy) {
+        var posStack = [this.getViewPos()];
         var c = this.c;
 
         var result = [];
         var content = this.document.content;
         for (var i = 0; i < content.length; i++) {
             var element = content[i];
-            var renderer = this.get_renderer(element);
-            if (renderer.is_global_point_in_object(c, pos_stack, xy)) {
+            var renderer = this.getRenderer(element);
+            if (renderer.isGlobalPointInObject(c, posStack, xy)) {
                 result.push(renderer);
             };
         }

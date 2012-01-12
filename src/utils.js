@@ -47,7 +47,7 @@
      * Non-recursively add the properties of the given arguments to
      * the given object.
      */
-    var object_concat = function(target) {
+    var objectConcat = function(target) {
         for (var i = 1; i < arguments.length; i++) {
             var source = arguments[i];
             for (var field in source) {
@@ -61,7 +61,7 @@
      * Returns the subset of an object made by selecting the given
      * keys from the original.
      */
-    var object_subset = function(original, keys) {
+    var objectSubset = function(original, keys) {
         var result = {};
         for (var i = 0; i < keys.length; i++) {
             var key = keys[i];
@@ -74,26 +74,26 @@
      * To hold local data, we use names beginning with '-', this
      * removes them.
      */
-    var object_clear_cache = function(target) {
+    var objectClearCache = function(target) {
         // Compile a list of keys to remove, so we don't try to
         // iterate through keys while we delete them. This may be
         // implementation dependent.
-        var to_remove = [];
+        var toRemove = [];
         for (var key in target) {
             if (key.substring(0,1) == '-') {
-                to_remove.push(key);
+                toRemove.push(key);
             }
         }
         // Remove the keys we compiled.
-        for (var i = 0; i < to_remove.length; i++) {
-            delete target[to_remove[i]];
+        for (var i = 0; i < toRemove.length; i++) {
+            delete target[toRemove[i]];
         }
     };
 
     /**
      * Performs a deep copy on the JSON-compatible object.
      */
-    var deep_copy = function(object) {
+    var deepCopy = function(object) {
         return JSON.parse(JSON.stringify(object));
     };
 
@@ -106,13 +106,13 @@
      * function can return new arguments for the other steps, and the
      * last can modify the result.
      */
-    var augment_function = function(current, before, after) {
+    var augmentFunction = function(current, before, after) {
         return function() {
-            var extra_args;
-            if (before) extra_args = before.apply(this, arguments);
-            if (extra_args === undefined) extra_args = arguments;
-            var result = current.apply(this, extra_args);
-            if (after) result = after.apply(this, [result].concat(extra_args));
+            var extraArgs;
+            if (before) extraArgs = before.apply(this, arguments);
+            if (extraArgs === undefined) extraArgs = arguments;
+            var result = current.apply(this, extraArgs);
+            if (after) result = after.apply(this, [result].concat(extraArgs));
             return result;
         };
     };
@@ -160,7 +160,7 @@
 	return result;
     };
 
-    var _crc32_constants = [
+    var _crc32Constants = [
         0x0, 0x77073096, 0xee0e612c, 0x990951ba,
         0x76dc419, 0x706af48f, 0xe963a535, 0x9e6495a3,
         0xedb8832, 0x79dcb8a4, 0xe0d5e91e, 0x97d2d988,
@@ -234,7 +234,7 @@
         var result = 0;
         for (var i = 0; i < source.length; i++) {
             var character = (result ^ source.charAt(i)) & 0xff;
-            result = (result >>> 8) ^ _crc32_constants[character];
+            result = (result >>> 8) ^ _crc32Constants[character];
         }
         return result & 0xffffff;
     };
@@ -247,12 +247,12 @@
     window.gce.utils = {
         ObjectBase: ObjectBase,
 
-        object_concat: object_concat,
-        object_subset: object_subset,
-        object_clear_cache: object_clear_cache,
-        deep_copy: deep_copy,
+        objectConcat: objectConcat,
+        objectSubset: objectSubset,
+        objectClearCache: objectClearCache,
+        deepCopy: deepCopy,
 
-        augment_function: augment_function,
+        augmentFunction: augmentFunction,
 
         uuid4: uuid4,
         utf8encode: utf8encode,

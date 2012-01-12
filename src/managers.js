@@ -2,10 +2,10 @@
     // Import
     var ObjectBase = gce.utils.ObjectBase;
 
-    var pos_copy = gce.datatypes.pos_copy;
+    var posCopy = gce.datatypes.posCopy;
 
     // --------------------------------------------------------------------
-    // Manages loading images in batches and cachine the results.
+    // Manages loading images in batches and caching the results.
     // --------------------------------------------------------------------
 
     var ImageManager = ObjectBase.extend();
@@ -17,23 +17,23 @@
      * images themselves are kept in a global cache shared by all image
      * managers.
      */
-    ImageManager.init = function(callback, callback_data, callback_this) {
+    ImageManager.init = function(callback, callbackData, callbackThis) {
         this.callback = {
             callback: callback,
-            data: callback_data,
-            that: callback_this
+            data: callbackData,
+            that: callbackThis
         };
 
         // Keep track of what we need to find before we can call the
         // callback.
-        this.waiting_for = {};
+        this.waitingFor = {};
     };
 
     /**
      * Call this method to ask the manager to load it. When all queued
      * images are loaded, the manager's callback will be notified.
      */
-    ImageManager.get_image = function(url) {
+    ImageManager.getImage = function(url) {
         var record = ImageManager._images[url];
         if (record === undefined) {
             // We haven't heard of this url before. Create a new record.
@@ -45,16 +45,16 @@
             ImageManager._images[url] = record;
 
             // Register our interest in it.
-            this.waiting_for[url] = true;
+            this.waitingFor[url] = true;
 
             // Initialise the loading
-            ImageManager._init_load(url);
+            ImageManager._initLoad(url);
         } else if (record.loading) {
             // We're in the process of loading this, so just make sure
             // our interest is registered.
-            if (!this.waiting_for[url]) {
+            if (!this.waitingFor[url]) {
                 record.managers.push(this);
-                this.waiting_for[url] = true;
+                this.waitingFor[url] = true;
             }
         } else {
             // We have loaded it already, so just return it.
@@ -71,7 +71,7 @@
     /**
      * Internal method that begins loading a particular url.
      */
-    ImageManager._init_load = function(url) {
+    ImageManager._initLoad = function(url) {
         var record = ImageManager._images[url];
         if (record === undefined || !record.image) {
 
@@ -85,7 +85,7 @@
                 // Notify each manager that we're loaded.
                 for (var i = 0; i < record.managers.length; i++) {
                     var manager = record.managers[i];
-                    manager._image_loaded(url);
+                    manager._imageLoaded(url);
                 }
                 delete record.managers;
             };
@@ -96,11 +96,11 @@
     /**
      * Internal method that is called when the given url has been loaded.
      */
-    ImageManager._image_loaded = function(url) {
-        delete this.waiting_for[url];
+    ImageManager._imageLoaded = function(url) {
+        delete this.waitingFor[url];
 
         // If we're the last one we're looking for, call the callback.
-        if ($.isEmptyObject(this.waiting_for)) {
+        if ($.isEmptyObject(this.waitingFor)) {
             var cb = this.callback;
             if (cb.callback) {
                 if (cb.that) {
@@ -121,9 +121,9 @@
     /**
      * Manages drag and drop for images on the given container.
      */
-    ImageDropManager.init = function($container, drop_callback) {
+    ImageDropManager.init = function($container, dropCallback) {
         this.$container = $container;
-        this.callback = drop_callback;
+        this.callback = dropCallback;
 
         // Register events
         var that = this;
@@ -152,21 +152,21 @@
         event.stopPropagation();
 
         // Find the transfer.
-        var data_transfer = event.originalEvent.dataTransfer;
-        if ($.browser.webkit) data_transfer.dropEffect = "copy";
-        if (!data_transfer || !data_transfer.files ||
-            !data_transfer.files.length) return;
+        var dataTransfer = event.originalEvent.dataTransfer;
+        if ($.browser.webkit) dataTransfer.dropEffect = "copy";
+        if (!dataTransfer || !dataTransfer.files ||
+            !dataTransfer.files.length) return;
 
         // Extract the files in turn.
         var that = this;
-        var files = data_transfer.files;
+        var files = dataTransfer.files;
         for (var i = 0; i < files.length; i++) {
-            var file_reader = new FileReader();
-            (function(file_reader, file) {
+            var fileReader = new FileReader();
+            (function(fileReader, file) {
                 // When we've loaded the data, construct an image.
-                file_reader.onload = function(event) {
+                fileReader.onload = function(event) {
                     // Process the read data.
-                    var url = file_reader.result;
+                    var url = fileReader.result;
                     var image = new Image();
 
                     // Notify the callback when the image is built
@@ -177,12 +177,12 @@
                     };
 
                     // Start the transfer.
-                    image.src = file_reader.result;
+                    image.src = fileReader.result;
                 };
-            })(file_reader, files[i]);
+            })(fileReader, files[i]);
 
             // Begin reading.
-            file_reader.readAsDataURL(files[i]);
+            fileReader.readAsDataURL(files[i]);
         }
 
         return false;
@@ -213,17 +213,17 @@
         // Set up the resizing code.
         this.lastSize = {w: null, h: null};
         if (isWindow) {
-            this._init_event_resize();
+            this._initEventResize();
         } else {
-            this._init_polling_resize();
+            this._initPollingResize();
         }
-        this._check_resize();
+        this._checkResize();
     };
 
     /**
      * Called when we have reason to think the size may have changed.
      */
-    ResizeManager._check_resize = function() {
+    ResizeManager._checkResize = function() {
         var w = this.$container.width();
         var h = this.$container.height();
         if (this.lastSize.w != w || this.lastSize.h != h) {
@@ -239,10 +239,10 @@
      * If we're tracking the window size, we can register with the
      * window resize event.
      */
-    ResizeManager._init_event_resize = function() {
+    ResizeManager._initEventResize = function() {
         var that = this;
         this.$container.bind('resize', function() {
-            that._check_resize()
+            that._checkResize()
         });
     };
 
@@ -250,9 +250,9 @@
      * The resize event only fires on the window, so this method polls
      * the container to see when it changes size.
      */
-    ResizeManager._init_polling_resize = function() {
+    ResizeManager._initPollingResize = function() {
         var that = this;
-        setInterval(function() { that._check_resize() }, 250);
+        setInterval(function() { that._checkResize() }, 250);
     };
 
     // --------------------------------------------------------------------
@@ -262,14 +262,14 @@
     var DragManager = ObjectBase.extend();
 
     DragManager.init = function() {
-        this.rotate_scale_override = false;
+        this.rotateScaleOverride = false;
 
-        this.lock_position = false;
-        this.lock_orientation = false;
-        this.lock_scale = false;
+        this.lockPosition = false;
+        this.lockOrientation = false;
+        this.lockScale = false;
 
-        this.touch_lookup = {};
-        this.active_touches = 0;
+        this.touchLookup = {};
+        this.activeTouches = 0;
     };
 
     /**
@@ -284,13 +284,13 @@
         this._update();
 
         // Set the initial position to be the current position.
-        this.initial_pos = pos_copy(this.pos);
+        this.initialPos = posCopy(this.pos);
 
         // Now go through all touches and make the inital be the current.
-        for (var id in this.touch_lookup) {
-            var touch_data = this.touch_lookup[id];
-            touch_data.initial.x = touch_data.current.x;
-            touch_data.initial.y = touch_data.current.y;
+        for (var id in this.touchLookup) {
+            var touchData = this.touchLookup[id];
+            touchData.initial.x = touchData.current.x;
+            touchData.initial.y = touchData.current.y;
         }
     };
 
@@ -299,23 +299,23 @@
      * accordingly.
      */
     DragManager._update = function() {
-        switch (this.active_touches) {
+        switch (this.activeTouches) {
         case 0:
             break;
 
         case 1:
-            if (this.rotate_scale_override) {
+            if (this.rotateScaleOverride) {
                 // We're doing a rotate-scale update.
-                this._update_orientation_scale();
+                this._updateOrientationScale();
             } else {
                 // Update translation.
-                this._update_position();
+                this._updatePosition();
             }
             break;
 
         case 2:
             // We have two touches, allowing us to get all the data at once.
-            this._update_position_orientation_scale();
+            this._updatePositionOrientationScale();
             break;
 
         default:
@@ -327,14 +327,14 @@
     /**
      * Processes the single touch as a position change.
      */
-    DragManager._update_position = function() {
-        if (this.lock_position) return;
+    DragManager._updatePosition = function() {
+        if (this.lockPosition) return;
 
-        for (var id in this.touch_lookup) {
-            var touch_data = this.touch_lookup[id];
-            var initial = this.initial_pos;
-            this.pos.x = initial.x + touch_data.current.x-touch_data.initial.x;
-            this.pos.y = initial.y + touch_data.current.y-touch_data.initial.y;
+        for (var id in this.touchLookup) {
+            var touchData = this.touchLookup[id];
+            var initial = this.initialPos;
+            this.pos.x = initial.x + touchData.current.x-touchData.initial.x;
+            this.pos.y = initial.y + touchData.current.y-touchData.initial.y;
 
             // We should have only one entry, but to be safe exit
             // explicitly.
@@ -345,28 +345,28 @@
     /**
      * Processes the single touch as an orientation/scale change.
      */
-    DragManager._update_orientation_scale = function() {
-        if (this.lock_orientation && this.lock_scale) return;
+    DragManager._updateOrientationScale = function() {
+        if (this.lockOrientation && this.lockScale) return;
 
-        for (var id in this.touch_lookup) {
-            var touch_data = this.touch_lookup[id];
-            var origin = this.origin_xy;
-            var initial = this.initial_pos;
+        for (var id in this.touchLookup) {
+            var touchData = this.touchLookup[id];
+            var origin = this.originXy;
+            var initial = this.initialPos;
 
-            var dx = touch_data.current.x - origin.x;
-            var dy = touch_data.current.y - origin.y;
-            var ox = touch_data.initial.x - origin.x;
-            var oy = touch_data.initial.y - origin.y;
+            var dx = touchData.current.x - origin.x;
+            var dy = touchData.current.y - origin.y;
+            var ox = touchData.initial.x - origin.x;
+            var oy = touchData.initial.y - origin.y;
 
-            if (!this.lock_orientation) {
-                var current_angle = Math.atan2(dy, dx);
-                var initial_angle = Math.atan2(oy, ox);
-                this.pos.o = initial.o + (current_angle - initial_angle);
+            if (!this.lockOrientation) {
+                var currentAngle = Math.atan2(dy, dx);
+                var initialAngle = Math.atan2(oy, ox);
+                this.pos.o = initial.o + (currentAngle - initialAngle);
             }
 
-            if (!this.lock_scale) {
-                var delta_scale = Math.sqrt(dx*dx+dy*dy)/Math.sqrt(ox*ox+oy*oy);
-                this.pos.s = initial.s * delta_scale;
+            if (!this.lockScale) {
+                var deltaScale = Math.sqrt(dx*dx+dy*dy)/Math.sqrt(ox*ox+oy*oy);
+                this.pos.s = initial.s * deltaScale;
             }
 
 
@@ -380,12 +380,12 @@
      * Sets the current pos for the thing we're dragging. Normally
      * this is done before any touches are recognized.
      */
-    DragManager.set_pos = function(pos, origin_xy, transform_origin) {
-        this.initial_pos = pos_copy(pos);
-        this.pos = pos_copy(pos);
+    DragManager.setPos = function(pos, originXy, transformOrigin) {
+        this.initialPos = posCopy(pos);
+        this.pos = posCopy(pos);
 
-        this.origin_xy = {x:origin_xy.x, y:origin_xy.y};
-        this.transform_origin = transform_origin;
+        this.originXy = {x:originXy.x, y:originXy.y};
+        this.transformOrigin = transformOrigin;
 
         this._commit();
     };
@@ -395,21 +395,21 @@
      * set. Normally on platforms without multitouch this is done with
      * another control (such as a modifier key).
      */
-    DragManager.set_rotate_scale_override = function(bool) {
-        if (this.rotate_scale_override != bool) {
+    DragManager.setRotateScaleOverride = function(bool) {
+        if (this.rotateScaleOverride != bool) {
             this._commit();
-            this.rotate_scale_override = bool;
+            this.rotateScaleOverride = bool;
         }
     };
 
     /**
      * Sets the locks on what can be changed.
      */
-    DragManager.set_locks = function(position, orientation, scale) {
+    DragManager.setLocks = function(position, orientation, scale) {
         this._commit();
-        this.lock_position = position;
-        this.lock_orientation = orientation;
-        this.lock_scale = scale;
+        this.lockPosition = position;
+        this.lockOrientation = orientation;
+        this.lockScale = scale;
     };
 
     /**
@@ -417,14 +417,14 @@
      * something that can be converted to a string uniquely) has begun
      * at the given x,y location.
      */
-    DragManager.start_touch = function(id, xy) {
+    DragManager.startTouch = function(id, xy) {
         // Create drag data to represent this drag.
-        var touch_data = {
+        var touchData = {
             initial: xy,
             current: xy
         };
-        this.touch_lookup[id] = touch_data;
-        this.active_touches++;
+        this.touchLookup[id] = touchData;
+        this.activeTouches++;
         this._commit();
     };
 
@@ -432,9 +432,9 @@
      * Notifies that the touch with the given id has moved to the
      * given location.
      */
-    DragManager.move_touch = function(id, xy) {
-        var touch_data = this.touch_lookup[id];
-        touch_data.current = xy;
+    DragManager.moveTouch = function(id, xy) {
+        var touchData = this.touchLookup[id];
+        touchData.current = xy;
         this._update();
     };
 
@@ -442,11 +442,11 @@
      * Notifies that the touch with the given id has lifted from the
      * given location.
      */
-    DragManager.end_touch = function(id, xy) {
+    DragManager.endTouch = function(id, xy) {
         // Just end the touch, delegate to move to do any updates first.
-        this.move_touch(id, xy);
-        delete this.touch_lookup[id];
-        this.active_touches--;
+        this.moveTouch(id, xy);
+        delete this.touchLookup[id];
+        this.activeTouches--;
         this._commit();
     };
 

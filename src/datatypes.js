@@ -25,7 +25,7 @@
     /**
      * Returns a new identity POS.
      */
-    var pos_create = function(x, y, o, s) {
+    var posCreate = function(x, y, o, s) {
         return {
             x:(x!==undefined)?x:0,
             y:(y!==undefined)?y:0,
@@ -37,7 +37,7 @@
     /**
      * Returns a new copy of the given pos.
      */
-    var pos_copy = function(pos) {
+    var posCopy = function(pos) {
         return {x:pos.x, y:pos.y, o:pos.o, s:pos.s};
     };
 
@@ -45,7 +45,7 @@
      * Returns a new POS which represents the combination of the two
      * given transforms.
      */
-    var pos_concat = function(pos1, pos2) {
+    var posConcat = function(pos1, pos2) {
         if (pos1 === undefined) return pos2;
         var cos = pos1.s * Math.cos(pos1.o);
         var sin = pos1.s * Math.sin(pos1.o);
@@ -60,7 +60,7 @@
     /**
      * Returns a POS which is the inverse of the given POS.
      */
-    var pos_invert = function(pos) {
+    var posInvert = function(pos) {
         var cos = Math.cos(pos.o)/pos.s;
         var sin = Math.sin(pos.o)/pos.s;
         return {
@@ -74,7 +74,7 @@
     /**
      * Returns the given x,y position transformed by the given POS.
      */
-    var pos_transform = function(pos, xy) {
+    var posTransform = function(pos, xy) {
         var cos = pos.s*Math.cos(pos.o);
         var sin = pos.s*Math.sin(pos.o);
         return {
@@ -87,7 +87,7 @@
      * Sets the 2d affine transform matrix for the given POS into the
      * given canvas context.
      */
-    var pos_set_transform = function(pos, c) {
+    var posSetTransform = function(pos, c) {
         var cos = pos.s*Math.cos(pos.o);
         var sin = pos.s*Math.sin(pos.o);
         c.setTransform(cos, sin, -sin, cos, pos.x, pos.y);
@@ -105,7 +105,7 @@
     /**
      * Creates a new AABB.
      */
-    var aabb_create = function(x, y, w, h) {
+    var aabbCreate = function(x, y, w, h) {
         return {
             x:(x!==undefined)?x:0,
             y:(y!==undefined)?y:0,
@@ -120,14 +120,14 @@
 
     if (window.gce === undefined) window.gce = {};
     window.gce.datatypes = {
-        pos_create: pos_create,
-        pos_copy: pos_copy,
-        pos_concat: pos_concat,
-        pos_invert: pos_invert,
-        pos_transform: pos_transform,
-        pos_set_transform: pos_set_transform,
+        posCreate: posCreate,
+        posCopy: posCopy,
+        posConcat: posConcat,
+        posInvert: posInvert,
+        posTransform: posTransform,
+        posSetTransform: posSetTransform,
 
-        aabb_create: aabb_create
+        aabbCreate: aabbCreate
     };
 
 })(jQuery)
