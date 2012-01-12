@@ -350,7 +350,7 @@
 
         for (var id in this.touchLookup) {
             var touchData = this.touchLookup[id];
-            var origin = this.originXy;
+            var origin = this.originXY;
             var initial = this.initialPos;
 
             var dx = touchData.current.x - origin.x;
@@ -380,11 +380,11 @@
      * Sets the current pos for the thing we're dragging. Normally
      * this is done before any touches are recognized.
      */
-    DragManager.setPos = function(pos, originXy, transformOrigin) {
+    DragManager.setPos = function(pos, originXY, transformOrigin) {
         this.initialPos = posCopy(pos);
         this.pos = posCopy(pos);
 
-        this.originXy = {x:originXy.x, y:originXy.y};
+        this.originXY = {x:originXY.x, y:originXY.y};
         this.transformOrigin = transformOrigin;
 
         this._commit();
