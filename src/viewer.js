@@ -147,7 +147,9 @@
     };
 
     // --------------------------------------------------------------------
-    // The viewer displays a document on a canvas.
+    // The viewer displays a document on a canvas. A viewer can be used
+    // to move around and zoom into some content, but cannot be used to
+    // edit the content.
     // --------------------------------------------------------------------
 
     var Viewer = ObjectBase.extend();
@@ -183,7 +185,7 @@
             var w = that.$canvas.width(), h = that.$canvas.height();
 
             var dm = DragManager.create();
-            dm.setPos(that.pos, {x:w*0.5, y:h*0.5}, false);
+            dm.setPos(that.pos, {x:w*0.5, y:h*0.5});
             dm.setLocks(false, true, false);
             dm.setRotateScaleOverride(event.shiftKey);
             dm.startTouch(1, {x:event.offsetX, y:event.offsetY});

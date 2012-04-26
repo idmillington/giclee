@@ -1,7 +1,6 @@
 (function($) {
     // Import
     var ObjectBase = gce.utils.ObjectBase;
-
     var posCopy = gce.datatypes.posCopy;
 
     // --------------------------------------------------------------------
@@ -333,8 +332,11 @@
         for (var id in this.touchLookup) {
             var touchData = this.touchLookup[id];
             var initial = this.initialPos;
-            this.pos.x = initial.x + touchData.current.x-touchData.initial.x;
-            this.pos.y = initial.y + touchData.current.y-touchData.initial.y;
+            var deltaX = touchData.current.x-touchData.initial.x;
+            var deltaY = touchData.current.y-touchData.initial.y;
+            this.pos.x = initial.x + deltaX;
+            this.pos.y = initial.y + deltaY;
+
 
             // We should have only one entry, but to be safe exit
             // explicitly.
@@ -369,7 +371,6 @@
                 this.pos.s = initial.s * deltaScale;
             }
 
-
             // We should have only one entry, but to be safe exit
             // explicitly.
             break;
@@ -380,12 +381,11 @@
      * Sets the current pos for the thing we're dragging. Normally
      * this is done before any touches are recognized.
      */
-    DragManager.setPos = function(pos, originXY, transformOrigin) {
+    DragManager.setPos = function(pos, originXY) {
         this.initialPos = posCopy(pos);
         this.pos = posCopy(pos);
 
         this.originXY = {x:originXY.x, y:originXY.y};
-        this.transformOrigin = transformOrigin;
 
         this._commit();
     };

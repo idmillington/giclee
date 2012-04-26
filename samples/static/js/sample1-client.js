@@ -1,29 +1,9 @@
 (function($) {
 
     // ----------------------------------------------------------------------
-    // System Setup
+    // This sample is fairly minimal, intended to show just basic document
+    // creation and viewer setup.
     // ----------------------------------------------------------------------
-
-    var _imageDropManager;
-    var _imageLoadCache = {};
-    var initImageDropManager = function() {
-        _imageDropManager = gce.managers.ImageDropManager.create(
-            $canvas,
-            function(img, fn) {
-                // Check if it has already loaded.
-                var crc = gce.utils.crc32(img.src.toString());
-                if (_imageLoadCache[crc]) {
-                    console.warn("Already loaded image: "+fn);
-                    return;
-                }
-
-                // Record that we've loaded this.
-                _imageLoadCache[crc] = true;
-
-                // TODO: Do something with it.
-            }
-        );
-    };
 
     var document;
     var viewer;
@@ -51,8 +31,6 @@
     var init = function() {
         initResizeManager();
         initViewer();
-
-        // initImageDropManager();
     };
 
     $(init);
