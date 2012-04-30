@@ -27,7 +27,7 @@ the extent this is possible. To do this do
 
 This uses JSHint, which you'll need to install with node:
 
-     npm install jshint
+    npm install jshint
 
 (despite the warning you get, it seems fine to install this locally).
 
@@ -37,7 +37,7 @@ This uses JSHint, which you'll need to install with node:
 There is a (currently woefully under-comprehensive) test suite. To
 access it, go to the `test` directory and do:
 
-      ./run.sh
+    ./run.sh
 
 to run the webserver, then go to `http://localhost:8081`.
 
@@ -52,7 +52,7 @@ example:
 
 Go into the `samples` directory and run the server:
 
-   ./run.sh
+    ./run.sh
 
 then go to `http://localhost:8000` and browse the samples. Then browse
 the accompanying code. Again the files are served with python's
