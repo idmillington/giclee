@@ -19,4 +19,4 @@
         clone: clone
     };
 
-})(jQuery)
+})(jQuery);

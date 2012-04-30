@@ -1,4 +1,4 @@
-(function($) {
+(function() {
     // Import
     var ObjectBase = gce.utils.ObjectBase;
 
@@ -119,4 +119,4 @@
         Document: Document
     };
 
-})(jQuery);
+})();

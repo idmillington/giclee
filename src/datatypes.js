@@ -1,4 +1,4 @@
-(function($) {
+(function() {
     /*
      * This module contains some data types used in the rest of the
      * system. They are not implemented as a derived type, because
@@ -93,6 +93,55 @@
         c.setTransform(cos, sin, -sin, cos, pos.x, pos.y);
     };
 
+    /**
+     * Creates a pos which represents a transform where the given two
+     * points are moved between their original and current locations,
+     * so posTransform(pos, original1) = current1, and
+     * posTransform(pos, original2) = current2.
+     */
+    var posFromPoints = function(original1, original2, current1, current2) {
+        // Figure out the movement from the change in 1.
+        var pos = {
+            x: current1.x - original1.x,
+            y: current1.y - original1.y,
+        };
+
+        // Find the change in orientation and scale.
+        var originalOffset = {
+            x: original2.x - original1.x,
+            y: original2.y - original1.y
+        };
+        var originalTheta = Math.atan2(originalOffset.y, originalOffset.x);
+        var originalDistance = Math.sqrt(originalOffset.y*originalOffset.y+
+                                         originalOffset.x*originalOffset.x);
+        if (originalDistance == 0) {
+            throw "The two original points must not be the same."
+        }
+
+        var currentOffset = {
+            x: current2.x - current1.x,
+            y: current2.y - current1.y
+        };
+        var currentTheta = Math.atan2(currentOffset.y, currentOffset.x);
+        var currentDistance = Math.sqrt(currentOffset.y*currentOffset.y+
+                                         currentOffset.x*currentOffset.x);
+
+        var deltaO = currentTheta - originalTheta;
+        while (deltaO < -Math.PI) deltaO += Math.PI;
+        while (deltaO > Math.PI) deltaO -= Math.PI;
+        pos.o = deltaO;
+
+        pos.s = currentDistance / originalDistance;
+
+        // Correct for the offset from 0,0
+        var cos = pos.s*Math.cos(pos.o);
+        var sin = pos.s*Math.sin(pos.o);
+        pos.x += cos*original1.x - sin*original1.y;
+        pos.y += sin*original1.x + cos.original1.y;
+
+        return pos;
+    };
+
     // ----------------------------------------------------------------------
     // AABBs
     // ----------------------------------------------------------------------
@@ -130,4 +179,4 @@
         aabbCreate: aabbCreate
     };
 
-})(jQuery)
+})();

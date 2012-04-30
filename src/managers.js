@@ -352,7 +352,7 @@
 
         for (var id in this.touchLookup) {
             var touchData = this.touchLookup[id];
-            var origin = this.originXY;
+            var origin = this.osOrigin;
             var initial = this.initialPos;
 
             var dx = touchData.current.x - origin.x;
@@ -381,13 +381,23 @@
      * Sets the current pos for the thing we're dragging. Normally
      * this is done before any touches are recognized.
      */
-    DragManager.setPos = function(pos, originXY) {
+    DragManager.setPos = function(pos) {
         this.initialPos = posCopy(pos);
         this.pos = posCopy(pos);
-
-        this.originXY = {x:originXY.x, y:originXY.y};
-
         this._commit();
+    };
+
+    /**
+     * Sets the origin for orientation/scale changes if the drag is
+     * single touch. Orientation / scale changes require a second
+     * point, and in single touch mode this is usually the object's
+     * origin, but it could be some globally fixed location too.  This
+     * should be called before any touches are reported. Its value is
+     * ignored if single touch OS isn't used.
+     */
+    DragManager.setOSOrigin = function(origin, isGlobal) {
+        this.osOrigin = {x:origin.x, y:origin.y};
+        this.osOriginIsGlobal = isGlobal;
     };
 
     /**

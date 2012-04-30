@@ -185,7 +185,8 @@
             var w = that.$canvas.width(), h = that.$canvas.height();
 
             var dm = DragManager.create();
-            dm.setPos(that.pos, {x:w*0.5, y:h*0.5});
+            dm.setPos(that.pos);
+            dm.setOSOrigin({x:w*0.5, y:h*0.5}, true);
             dm.setLocks(false, true, false);
             dm.setRotateScaleOverride(event.shiftKey);
             dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
