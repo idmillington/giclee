@@ -121,8 +121,8 @@
             var originalTheta = Math.atan2(originalOffset.y, originalOffset.x);
             var currentTheta = Math.atan2(currentOffset.y, currentOffset.x);
             var deltaO = currentTheta - originalTheta;
-            while (deltaO < -Math.PI) deltaO += Math.PI;
-            while (deltaO > Math.PI) deltaO -= Math.PI;
+            while (deltaO < -Math.PI) deltaO += 2*Math.PI;
+            while (deltaO > Math.PI) deltaO -= 2*Math.PI;
             pos.o = deltaO;
         }
 
