@@ -336,7 +336,6 @@
             this.pos.x = initial.x + deltaX;
             this.pos.y = initial.y + deltaY;
 
-
             // We should have only one entry, but to be safe exit
             // explicitly.
             break;
@@ -351,24 +350,16 @@
 
         for (var id in this.touchLookup) {
             var touchData = this.touchLookup[id];
+
             var origin = this.osOrigin;
             var initial = this.initialPos;
 
-            var dx = touchData.current.x - origin.x;
-            var dy = touchData.current.y - origin.y;
-            var ox = touchData.initial.x - origin.x;
-            var oy = touchData.initial.y - origin.y;
-
-            if (!this.lockOrientation) {
-                var currentAngle = Math.atan2(dy, dx);
-                var initialAngle = Math.atan2(oy, ox);
-                this.pos.o = initial.o + (currentAngle - initialAngle);
-            }
-
-            if (!this.lockScale) {
-                var deltaScale = Math.sqrt(dx*dx+dy*dy)/Math.sqrt(ox*ox+oy*oy);
-                this.pos.s = initial.s * deltaScale;
-            }
+            var deltaPos = gce.datatypes.posFromPoints(
+                origin, touchData.initial,
+                origin, touchData.current,
+                this.lockOrientation, this.lockScale
+            );
+            this.pos = gce.datatypes.posConcat(deltaPos, this.initialPos);
 
             // We should have only one entry, but to be safe exit
             // explicitly.
@@ -394,7 +385,7 @@
      * should be called before any touches are reported. Its value is
      * ignored if single touch OS isn't used.
      */
-    DragManager.setOSOrigin = function(origin, isGlobal) {
+    DragManager.setRotateScaleOrigin = function(origin, isGlobal) {
         this.osOrigin = {x:origin.x, y:origin.y};
         this.osOriginIsGlobal = isGlobal;
     };

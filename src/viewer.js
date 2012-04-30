@@ -185,7 +185,7 @@
 
             var dm = DragManager.create();
             dm.setPos(that.pos);
-            dm.setOSOrigin({x:w*0.5, y:h*0.5}, true);
+            dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, true);
             dm.setLocks(false, true, false);
             dm.setRotateScaleOverride(event.shiftKey);
             dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
@@ -249,17 +249,6 @@
     };
 
     /**
-     * Returns the POS of the main view, which is based on the
-     * internal POS field, and the dimensions of the canvas, such that
-     * the position in that POS field appears at the center of the canvas.
-     */
-    Viewer.getViewPos = function() {
-        var pos = this.pos;
-        var w = this.$canvas.width(), h = this.$canvas.height();
-        return {x:w*0.5+pos.x, y:h*0.5+pos.y, o:pos.o, s:pos.s};
-    };
-
-    /**
      * Performs a complete redraw of the canvas.
      */
     Viewer.draw = function() {
@@ -277,7 +266,7 @@
         var c = this.c;
         c.clearRect(x, y, w, h);
 
-        var posStack = [this.getViewPos()];
+        var posStack = [this.pos];
         var aabb = aabbCreate(x, y, w, h);
 
         var content = this.document.content;
@@ -293,7 +282,7 @@
      * coordinates.
      */
     Viewer.getRenderersAt = function(xy) {
-        var posStack = [this.getViewPos()];
+        var posStack = [this.pos];
         var c = this.c;
 
         var result = [];

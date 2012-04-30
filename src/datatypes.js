@@ -99,38 +99,41 @@
      * so posTransform(pos, original1) = current1, and
      * posTransform(pos, original2) = current2.
      */
-    var posFromPoints = function(original1, original2, current1, current2) {
+    var posFromPoints = function(original1, original2, current1, current2,
+                                 lockOrientation, lockScale) {
         // Figure out the movement from the change in 1.
         var pos = {
-            x: current1.x, y: current1.y
+            x: current1.x, y: current1.y, o:0, s:1
         };
 
-        // Find the change in orientation and scale.
+        // Calculate offsets
         var originalOffset = {
-            x: original2.x - original1.x,
-            y: original2.y - original1.y
+            x: original2.x - original1.x, y: original2.y - original1.y
         };
-        var originalTheta = Math.atan2(originalOffset.y, originalOffset.x);
         var originalDistance = Math.sqrt(originalOffset.y*originalOffset.y+
                                          originalOffset.x*originalOffset.x);
         if (originalDistance === 0) {
             throw "The two original points must not be the same.";
         }
-
         var currentOffset = {
-            x: current2.x - current1.x,
-            y: current2.y - current1.y
+            x: current2.x - current1.x, y: current2.y - current1.y
         };
-        var currentTheta = Math.atan2(currentOffset.y, currentOffset.x);
-        var currentDistance = Math.sqrt(currentOffset.y*currentOffset.y+
-                                         currentOffset.x*currentOffset.x);
 
-        var deltaO = currentTheta - originalTheta;
-        while (deltaO < -Math.PI) deltaO += Math.PI;
-        while (deltaO > Math.PI) deltaO -= Math.PI;
-        pos.o = deltaO;
+        // Find the change in orientation and scale.
+        if (!lockOrientation) {
+            var originalTheta = Math.atan2(originalOffset.y, originalOffset.x);
+            var currentTheta = Math.atan2(currentOffset.y, currentOffset.x);
+            var deltaO = currentTheta - originalTheta;
+            while (deltaO < -Math.PI) deltaO += Math.PI;
+            while (deltaO > Math.PI) deltaO -= Math.PI;
+            pos.o = deltaO;
+        }
 
-        pos.s = currentDistance / originalDistance;
+        if (!lockScale) {
+            var currentDistance = Math.sqrt(currentOffset.y*currentOffset.y+
+                                            currentOffset.x*currentOffset.x);
+            pos.s = currentDistance / originalDistance;
+        }
 
         // Correct for the offset from 0,0
         var cos = pos.s*Math.cos(pos.o);
