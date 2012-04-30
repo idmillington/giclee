@@ -103,7 +103,7 @@
         // Figure out the movement from the change in 1.
         var pos = {
             x: current1.x - original1.x,
-            y: current1.y - original1.y,
+            y: current1.y - original1.y
         };
 
         // Find the change in orientation and scale.
@@ -114,8 +114,8 @@
         var originalTheta = Math.atan2(originalOffset.y, originalOffset.x);
         var originalDistance = Math.sqrt(originalOffset.y*originalOffset.y+
                                          originalOffset.x*originalOffset.x);
-        if (originalDistance == 0) {
-            throw "The two original points must not be the same."
+        if (originalDistance === 0) {
+            throw "The two original points must not be the same.";
         }
 
         var currentOffset = {
@@ -160,7 +160,7 @@
             y:(y!==undefined)?y:0,
             w:(w!==undefined)?w:0,
             h:(h!==undefined)?h:0
-        }
+        };
     };
 
     // --------------------------------------------------------------------

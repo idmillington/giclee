@@ -45,8 +45,7 @@
         c.translate(50, 0);
         c.moveTo(125, 50);
         c.arc(100, 50, 25, 0, 360, false);
-        if (!c.isPointInPath(150, 50))
-        {
+        if (!c.isPointInPath(150, 50)) {
             // Replace the method with a new wrapper.
             var proto = CanvasRenderingContext2D.prototype;
             var original = proto.isPointInPath;
@@ -57,7 +56,7 @@
                 this.restore();
                 return result;
             };
-        };
+        }
     })();
 
     // --------------------------------------------------------------------
@@ -87,7 +86,7 @@
 
         // TODO: Calculate the local bounds from the transform and
         // global bounds.
-        var localBounds = undefined;
+        var localBounds;
 
         // Set the transform.
         c.save();
@@ -143,7 +142,7 @@
      */
     Renderer.isLocalPointInObject = function(c, posStack, localPoint) {
         var x = localPoint.x, y = localPoint.y;
-        return x > -50 && x < 50 && y > -50 && y < 50;;
+        return x > -50 && x < 50 && y > -50 && y < 50;
     };
 
     // --------------------------------------------------------------------
@@ -163,7 +162,7 @@
      * from the Renderer object.
      */
     Viewer.init = function($canvas, document, renderers) {
-        this.$canvas = $canvas
+        this.$canvas = $canvas;
         this.canvas = $canvas.get(0);
         this.c = this.canvas.getContext("2d");
 
@@ -231,7 +230,7 @@
                 // Otherwise find the approprate type.
                 var RendererType = that.renderers[element.type];
                 if (RendererType === undefined) {
-                    RendererType = that.renderers["$default"];
+                    RendererType = that.renderers.$default;
                 }
 
                 // Instantiate it.
@@ -304,7 +303,7 @@
             var renderer = this.getRenderer(element);
             if (renderer.isGlobalPointInObject(c, posStack, xy)) {
                 result.push(renderer);
-            };
+            }
         }
         return result;
     };

@@ -47,7 +47,7 @@
     EventGeneratingCommandHandler.init = function() {
         CommandHandler.init();
         this.listeners = [];
-    }
+    };
 
     /**
      * Run the given command, then fire the event returned.
@@ -72,7 +72,7 @@
                 }
                 delete that._sending;
             }, 0);
-        };
+        }
     };
 
     /**

@@ -16,11 +16,11 @@
          * get called up the chain automatically, derived objects
          * should explicitly call any parent init functions they need.
          */
-	create: function() {
+        create: function() {
             var self = this.extend();
             this.init.apply(self, arguments);
             return self;
-	},
+        },
 
         /**
          * Empty init function, in case none is needed.
@@ -33,9 +33,9 @@
          * Crockford's object() function).
          */
         extend: function() {
-	    function Constructor() {}
-	    Constructor.prototype = this;
-	    return new Constructor();
+            function Constructor() {}
+            Constructor.prototype = this;
+            return new Constructor();
         }
     };
 
@@ -140,24 +140,24 @@
      * Normalizes the given string into utf8 encoding.
      */
     var utf8encode = function(string) {
-	string = string.replace(/\r\n/g,"\n");
-	var result = "";
+        string = string.replace(/\r\n/g,"\n");
+        var result = "";
 
-	for (var n = 0; n < string.length; n++) {
-	    var c = string.charCodeAt(n);
-	    if (c < 128) {
-		result += String.fromCharCode(c);
-	    } else if((c > 127) && (c < 2048)) {
-		result += String.fromCharCode((c >> 6) | 192);
-		result += String.fromCharCode((c & 63) | 128);
-	    } else {
-		result += String.fromCharCode((c >> 12) | 224);
-		result += String.fromCharCode(((c >> 6) & 63) | 128);
-		result += String.fromCharCode((c & 63) | 128);
-	    }
-	}
+        for (var n = 0; n < string.length; n++) {
+            var c = string.charCodeAt(n);
+            if (c < 128) {
+                result += String.fromCharCode(c);
+            } else if((c > 127) && (c < 2048)) {
+                result += String.fromCharCode((c >> 6) | 192);
+                result += String.fromCharCode((c & 63) | 128);
+            } else {
+                result += String.fromCharCode((c >> 12) | 224);
+                result += String.fromCharCode(((c >> 6) & 63) | 128);
+                result += String.fromCharCode((c & 63) | 128);
+            }
+        }
 
-	return result;
+        return result;
     };
 
     var _crc32Constants = [
@@ -256,7 +256,7 @@
 
         uuid4: uuid4,
         utf8encode: utf8encode,
-        crc32: crc32,
+        crc32: crc32
     };
 
 })();

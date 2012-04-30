@@ -1,6 +1,6 @@
 all: sample_css min_version debug_version downloads
 
-.PHONY: all sample_css min_version debug_version clean downloads
+.PHONY: all sample_css min_version debug_version clean downloads lint
 
 # ----------------------------------------------------------------------------
 # Sample CSS Generation from LESS files
@@ -84,3 +84,11 @@ clean:
 	rm -f $(SAMPLE_CSS)
 	rm -f $(JQUERY_FILES) $(JQUERY_TMP)
 	rm -rf $(OUT_DIR)
+
+# ----------------------------------------------------------------------------
+# Linting
+
+JSHINT = ./node_modules/jshint/bin/hint
+
+lint:
+	$(JSHINT) $(SRC_FILES)

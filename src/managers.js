@@ -158,29 +158,28 @@
 
         // Extract the files in turn.
         var that = this;
+        var extractFile = function(fileReader, file) {
+            // When we've loaded the data, construct an image.
+            fileReader.onload = function(event) {
+                // Process the read data.
+                var url = fileReader.result;
+                var image = new Image();
+
+                // Notify the callback when the image is built
+                // (should be pretty much instant).
+                image.onload = function() {
+                    var filename = file.name?file.name:file.fileName;
+                    that.callback(image, filename);
+                };
+
+                // Start the transfer.
+                image.src = fileReader.result;
+            };
+        };
         var files = dataTransfer.files;
         for (var i = 0; i < files.length; i++) {
             var fileReader = new FileReader();
-            (function(fileReader, file) {
-                // When we've loaded the data, construct an image.
-                fileReader.onload = function(event) {
-                    // Process the read data.
-                    var url = fileReader.result;
-                    var image = new Image();
-
-                    // Notify the callback when the image is built
-                    // (should be pretty much instant).
-                    image.onload = function() {
-                        var filename = file.name?file.name:file.fileName;
-                        that.callback(image, filename);
-                    };
-
-                    // Start the transfer.
-                    image.src = fileReader.result;
-                };
-            })(fileReader, files[i]);
-
-            // Begin reading.
+            extractFile(fileReader, files[i]);
             fileReader.readAsDataURL(files[i]);
         }
 
@@ -241,7 +240,7 @@
     ResizeManager._initEventResize = function() {
         var that = this;
         this.$container.bind('resize', function() {
-            that._checkResize()
+            that._checkResize();
         });
     };
 
@@ -251,7 +250,7 @@
      */
     ResizeManager._initPollingResize = function() {
         var that = this;
-        setInterval(function() { that._checkResize() }, 250);
+        setInterval(function() { that._checkResize(); }, 250);
     };
 
     // --------------------------------------------------------------------
@@ -470,6 +469,6 @@
         ImageDropManager: ImageDropManager,
         ResizeManager: ResizeManager,
         DragManager: DragManager
-    }
+    };
 
 })(jQuery);
