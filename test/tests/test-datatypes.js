@@ -1,28 +1,41 @@
 (function($) {
+    var round = function(number) {
+        return Math.round(number * 1000) * 0.001;
+    };
+
     $(document).ready(function(){
 
         module("datatypes.js");
+        var dt = gce.datatypes;
 
-        test("a basic test example", function() {
-            ok( true, "this test is fine" );
-            var value = "hello";
-            equal( value, "hello", "We expect value to be hello" );
-        });
+        test("posFromPoints", function() {
+            var tests = [
+                [
+                    {x:1, y:1}, {x:2, y:1},  {x:4, y:1}, {x:5, y:1},
+                    {x:3, y:0, s:1, o:0}
+                ],
+                [
+                    {x:1, y:1}, {x:2, y:1},  {x:4, y:1}, {x:6, y:1},
+                    {x:2, y:-1, s:2, o:0}
+                ],
+                [
+                    {x:1, y:0}, {x:2, y:0},  {x:1, y:1}, {x:2, y:2},
+                    {x:0, y:0, s:round(Math.sqrt(2.0)), o:round(Math.PI*0.25)}
+                ],
+                [
+                    {x:0, y:1}, {x:1, y:1},  {x:0, y:0}, {x:1, y:1},
+                    {x:1, y:-1, s:round(Math.sqrt(2.0)), o:round(Math.PI*0.25)}
+                ]
+            ];
+            expect(tests.length);
 
-        test("first test within module", function() {
-            ok( true, "all pass" );
-        });
-
-        test("second test within module", function() {
-            ok( true, "all pass" );
-        });
-
-        module("Module B");
-
-        test("some other test", function() {
-            expect(2);
-            equal( true, false, "failing test" );
-            equal( true, true, "passing test" );
+            for (var i = 0; i < tests.length; i++) {
+                var test = tests[i];
+                var pos = dt.posFromPoints(test[0], test[1], test[2], test[3]);
+                pos.x = round(pos.x); pos.y = round(pos.y);
+                pos.o = round(pos.o); pos.s = round(pos.s);
+                deepEqual(pos, test[4]);
+            }
         });
 
     });

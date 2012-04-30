@@ -102,8 +102,7 @@
     var posFromPoints = function(original1, original2, current1, current2) {
         // Figure out the movement from the change in 1.
         var pos = {
-            x: current1.x - original1.x,
-            y: current1.y - original1.y
+            x: current1.x, y: current1.y
         };
 
         // Find the change in orientation and scale.
@@ -136,8 +135,8 @@
         // Correct for the offset from 0,0
         var cos = pos.s*Math.cos(pos.o);
         var sin = pos.s*Math.sin(pos.o);
-        pos.x += cos*original1.x - sin*original1.y;
-        pos.y += sin*original1.x + cos.original1.y;
+        pos.x -= cos*original1.x - sin*original1.y;
+        pos.y -= sin*original1.x + cos*original1.y;
 
         return pos;
     };
@@ -175,6 +174,7 @@
         posInvert: posInvert,
         posTransform: posTransform,
         posSetTransform: posSetTransform,
+        posFromPoints: posFromPoints,
 
         aabbCreate: aabbCreate
     };
