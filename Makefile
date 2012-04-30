@@ -6,15 +6,19 @@ all: sample_css min_version debug_version downloads
 # Sample CSS Generation from LESS files
 
 SAMPLE_CSS_DIR = samples/static/css
-COMMON_SAMPLE_CSS = $(SAMPLE_CSS_DIR)/sample-common.less
+COMMON_SAMPLE_LESS = $(SAMPLE_CSS_DIR)/sample-common.less
+COMMON_SAMPLE_CSS = $(patsubst %.less, %.css, $(COMMON_SAMPLE_LESS))
 SAMPLE_LESS = $(wildcard $(SAMPLE_CSS_DIR)/sample*-client.less)
 SAMPLE_CSS = $(patsubst %.less, %.css, $(SAMPLE_LESS))
 LESSC = node_modules/less/bin/lessc
 
-%.css: %.less
-	cat $(COMMON_SAMPLE_CSS) $< | $(LESSC) - $@
+$(COMMON_SAMPLE_CSS): $(COMMON_SAMPLE_LESS)
+	cat $< | $(LESSC) - $@
 
-sample_css: $(SAMPLE_CSS)
+%.css: %.less $(COMMON_SAMPLE_LESS)
+	cat $(COMMON_SAMPLE_LESS) $< | $(LESSC) - $@
+
+sample_css: $(SAMPLE_CSS) $(COMMON_SAMPLE_CSS)
 
 # ----------------------------------------------------------------------------
 # Compiling of the main source code. NB: We have to explicitly state
@@ -81,7 +85,7 @@ $(JQUERY_FILES): $(JQUERY_TMP)
 
 clean:
 	rm -f $(MIN_OUT) $(DEBUG_OUT) $(ADDITIONAL_MIN) $(ADDITIONAL_DEBUG)
-	rm -f $(SAMPLE_CSS)
+	rm -f $(SAMPLE_CSS) $(COMMON_SAMPLE_CSS)
 	rm -f $(JQUERY_FILES) $(JQUERY_TMP)
 	rm -rf $(OUT_DIR)
 

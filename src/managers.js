@@ -357,7 +357,7 @@
             var deltaPos = gce.datatypes.posFromPoints(
                 origin, touchData.initial,
                 origin, touchData.current,
-                this.lockOrientation, this.lockScale
+                this.lockPosition, this.lockOrientation, this.lockScale
             );
             this.pos = gce.datatypes.posConcat(deltaPos, this.initialPos);
 
@@ -365,6 +365,27 @@
             // explicitly.
             break;
         }
+    };
+
+    /**
+     * Processes the double touch.
+     */
+    DragManager._updatePositionOrientationScale = function() {
+        if (this.lockPosition && this.lockOrientation && this.lockScale) return;
+
+        var touches = [];
+        for (var id in this.touchLookup) {
+            touches.push(this.touchLookup[id]);
+        }
+
+        // We should only be called with exactly two touches, so
+        // assume our touches are the first pair.
+        var deltaPos = gce.datatypes.posFromPoints(
+            touches[0].initial, touches[0].current,
+            touches[1].initial, touches[1].current,
+            this.lockPosition, this.lockOrientation, this.lockScale
+        );
+        this.pos = gce.datatypes.posConcat(deltaPos, this.initialPos);
     };
 
     /**

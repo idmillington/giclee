@@ -100,11 +100,8 @@
      * posTransform(pos, original2) = current2.
      */
     var posFromPoints = function(original1, original2, current1, current2,
-                                 lockOrientation, lockScale) {
-        // Figure out the movement from the change in 1.
-        var pos = {
-            x: current1.x, y: current1.y, o:0, s:1
-        };
+                                 lockPosition, lockOrientation, lockScale) {
+        var pos = {x:0, y:0, o:0, s:1};
 
         // Calculate offsets
         var originalOffset = {
@@ -135,11 +132,14 @@
             pos.s = currentDistance / originalDistance;
         }
 
-        // Correct for the offset from 0,0
-        var cos = pos.s*Math.cos(pos.o);
-        var sin = pos.s*Math.sin(pos.o);
-        pos.x -= cos*original1.x - sin*original1.y;
-        pos.y -= sin*original1.x + cos*original1.y;
+        // Calculate the change in position
+        if (!lockPosition) {
+            // Correct for the offset from 0,0
+            var cos = pos.s*Math.cos(pos.o);
+            var sin = pos.s*Math.sin(pos.o);
+            pos.x = current1.x - (cos*original1.x - sin*original1.y);
+            pos.y = current1.y - (sin*original1.x + cos*original1.y);
+        }
 
         return pos;
     };
