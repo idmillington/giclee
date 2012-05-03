@@ -1,7 +1,7 @@
 (function($) {
     // Import
-    var ObjectBase = gce.utils.ObjectBase;
-    var posCopy = gce.datatypes.posCopy;
+    var ObjectBase = giclee.utils.ObjectBase;
+    var posCopy = giclee.datatypes.posCopy;
 
     // --------------------------------------------------------------------
     // Manages loading images in batches and caching the results.
@@ -354,12 +354,12 @@
             var origin = this.osOrigin;
             var initial = this.initialPos;
 
-            var deltaPos = gce.datatypes.posFromPoints(
+            var deltaPos = giclee.datatypes.posFromPoints(
                 origin, touchData.initial,
                 origin, touchData.current,
                 this.lockPosition, this.lockOrientation, this.lockScale
             );
-            this.pos = gce.datatypes.posConcat(deltaPos, this.initialPos);
+            this.pos = giclee.datatypes.posConcat(deltaPos, this.initialPos);
 
             // We should have only one entry, but to be safe exit
             // explicitly.
@@ -380,12 +380,12 @@
 
         // We should only be called with exactly two touches, so
         // assume our touches are the first pair.
-        var deltaPos = gce.datatypes.posFromPoints(
+        var deltaPos = giclee.datatypes.posFromPoints(
             touches[0].initial, touches[0].current,
             touches[1].initial, touches[1].current,
             this.lockPosition, this.lockOrientation, this.lockScale
         );
-        this.pos = gce.datatypes.posConcat(deltaPos, this.initialPos);
+        this.pos = giclee.datatypes.posConcat(deltaPos, this.initialPos);
     };
 
     /**
@@ -475,8 +475,8 @@
     // API
     // --------------------------------------------------------------------
 
-    if (window.gce === undefined) window.gce = {};
-    window.gce.managers = {
+    if (window.giclee === undefined) window.giclee = {};
+    window.giclee.managers = {
         ImageManager: ImageManager,
         ImageDropManager: ImageDropManager,
         ResizeManager: ResizeManager,

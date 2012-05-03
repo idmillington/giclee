@@ -1,17 +1,17 @@
 (function($) {
     // Import
-    var ObjectBase = gce.utils.ObjectBase;
+    var ObjectBase = giclee.utils.ObjectBase;
 
-    var aabbCreate = gce.datatypes.aabbCreate;
+    var aabbCreate = giclee.datatypes.aabbCreate;
 
-    var posCreate = gce.datatypes.posCreate;
-    var posCopy = gce.datatypes.posCopy;
-    var posConcat = gce.datatypes.posConcat;
-    var posInvert = gce.datatypes.posInvert;
-    var posTransform = gce.datatypes.posTransform;
-    var posSetTransform = gce.datatypes.posSetTransform;
+    var posCreate = giclee.datatypes.posCreate;
+    var posCopy = giclee.datatypes.posCopy;
+    var posConcat = giclee.datatypes.posConcat;
+    var posInvert = giclee.datatypes.posInvert;
+    var posTransform = giclee.datatypes.posTransform;
+    var posSetTransform = giclee.datatypes.posSetTransform;
 
-    var DragManager = gce.managers.DragManager;
+    var DragManager = giclee.managers.DragManager;
 
     // ----------------------------------------------------------------------
     // Platform dependency shims
@@ -301,8 +301,8 @@
     // API
     // --------------------------------------------------------------------
 
-    if (window.gce === undefined) window.gce = {};
-    window.gce.viewer = {
+    if (window.giclee === undefined) window.giclee = {};
+    window.giclee.viewer = {
         Viewer: Viewer
     };
 

@@ -28,8 +28,8 @@ sample_css: $(SAMPLE_CSS) $(COMMON_SAMPLE_CSS)
 SRC_FILES = src/utils.js src/datatypes.js src/document.js src/managers.js \
 	src/viewer.js src/ui.js
 
-MIN_NAME = gce.min.js
-DEBUG_NAME = gce.js
+MIN_NAME = giclee.min.js
+DEBUG_NAME = giclee.js
 OUT_DIR = out
 ADDITIONAL_DIRS = samples/static/js test/static/js
 UGLIFY = node_modules/uglify-js/bin/uglifyjs

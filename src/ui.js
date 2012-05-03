@@ -14,8 +14,8 @@
     // API
     // --------------------------------------------------------------------
 
-    if (window.gce === undefined) window.gce = {};
-    window.gce.ui = {
+    if (window.giclee === undefined) window.giclee = {};
+    window.giclee.ui = {
         clone: clone
     };
 

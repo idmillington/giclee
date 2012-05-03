@@ -1,4 +1,4 @@
-# Generic Canvas Editor
+# Giclee -- Canvas Editor
 
 This is an object-based canvas editing system designed for both
 desktop and multi-touch use. It also contains a bunch of useful

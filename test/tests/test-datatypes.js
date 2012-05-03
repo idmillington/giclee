@@ -6,7 +6,7 @@
     $(document).ready(function(){
 
         module("datatypes.js");
-        var dt = gce.datatypes;
+        var dt = giclee.datatypes;
 
         test("posFromPoints", function() {
             var tests = [

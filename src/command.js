@@ -1,6 +1,6 @@
 (function() {
     // Import
-    var ObjectBase = gce.utils.ObjectBase;
+    var ObjectBase = giclee.utils.ObjectBase;
 
     // --------------------------------------------------------------------
     // Commands wrap modifications to a document.
@@ -52,8 +52,8 @@
     // API
     // --------------------------------------------------------------------
 
-    if (window.gce === undefined) window.gce = {};
-    window.gce.command = {
+    if (window.giclee === undefined) window.giclee = {};
+    window.giclee.command = {
         CommandBase: CommandBase
     };
 

@@ -243,8 +243,8 @@
     // API
     // --------------------------------------------------------------------
 
-    if (window.gce === undefined) window.gce = {};
-    window.gce.utils = {
+    if (window.giclee === undefined) window.giclee = {};
+    window.giclee.utils = {
         ObjectBase: ObjectBase,
 
         objectConcat: objectConcat,

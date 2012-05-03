@@ -169,8 +169,8 @@
     // API
     // --------------------------------------------------------------------
 
-    if (window.gce === undefined) window.gce = {};
-    window.gce.datatypes = {
+    if (window.giclee === undefined) window.giclee = {};
+    window.giclee.datatypes = {
         posCreate: posCreate,
         posCopy: posCopy,
         posConcat: posConcat,
