@@ -1,5 +1,7 @@
 body {
-     font: 83.5%/1.5 sans-serif;
+     font-family: "Ubuntu", "Tahoma", sans-serif;
+     line-height: 1.4;
+     font-size: 90%;
      margin: 0;
 }
 a {
@@ -13,10 +15,20 @@ h1 {
     margin: 0 0 0.5em 0;
     font-size: 1.6em;
     font-weight: normal;
+    text-align: center;
+    line-height: 1;
 }
-
+p#back {
+    text-align: center;
+    margin: -0.5em 0 1em 0;
+}
 p {
     margin: 0 0 0.5em 0;
+}
+
+tt {
+    font-family: "Ubuntu Mono", "Liberation Mono", "Lucida Console", monospace;
+    font-size: 1.2em;
 }
 
 #content {
@@ -25,7 +37,6 @@ p {
 }
 
 #description {
-    position: absolute;
     width: 20em;
     background: white;
     padding: 1em;
@@ -33,25 +44,29 @@ p {
     box-shadow: 1px 1px 8px rgba(0,0,0,0.25);
     font-size: 0.9em;
 }
-#description, #description.bottomleft {
+.bottomleft {
+    position: absolute;
     bottom: 1em;
     left: 1em;
     top: auto;
     right: auto;
 }
-#description.topleft {
+.topleft {
+    position: absolute;
     top: 1em;
     left: 1em;
     bottom: auto;
     right: auto;
 }
-#description.topright {
+.topright {
+    position: absolute;
     top: 1em;
     left: auto;
     bottom: auto;
     right: 1em;
 }
-#description.bottomright {
+.bottomright {
+    position: absolute;
     top: auto;
     left: auto;
     bottom: 1em;

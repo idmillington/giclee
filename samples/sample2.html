@@ -1,8 +1,8 @@
 <!doctype html>
 <html>
   <head>
-    <title>Gicl&eacute;e - Sample One</title>
-    <link rel="stylesheet" href="/static/css/sample1-client.css">
+    <title>Gicl&eacute;e - Sample Two</title>
+    <link rel="stylesheet" href="/static/css/sample2-client.css">
     <script src="/static/js/jquery.min.js"></script>
 
     <!--
@@ -17,30 +17,27 @@
     <script src="/static/js/giclee/ui.js"></script>
     <!-- -->
 
-    <script src="/static/js/sample1-client.js"></script>
+    <script src="/static/js/sample2-client.js"></script>
   </head>
   <body>
     <canvas id="canvas"></canvas>
+    <canvas id="overview" class="bottomleft"></canvas>
     <div id="description" class="topright">
       <h1>
         <img src="/static/img/logo-small.png"><br>
-        Sample One
+        Sample Two
       </h1>
       <p id="back"><a href="..">View Sample List</a></p>
 
       <p>
-        This sample shows a basic <tt>Viewer</tt> displaying a
-        document with two elements in it. The elements are black
-        squares.
+        This sample shows a <tt>Viewer</tt> with an
+        associated <tt>Overview</tt> component for navigation.
       </p>
       <p>
-        Because it is a <tt>Viewer</tt>, the shapes are not editable
-        or movable. You are actually moving the view, not the shapes.
-      </p>
-      <p>
-        By default a <tt>Viewer</tt> can be dragged to move and
-        shift-dragged (or dragged with two fingers) to zoom, but
-        cannot be rotated.
+        The <tt>Overview</tt> is connected to a viewer, and shows the
+        extents of its view. You can pan the view by dragging
+        the <tt>Overview</tt> window. If you shift drag (or two finer
+        drag) the <tt>Overview</tt>, it will zoom the main view.
       </p>
   </body>
 </html>
