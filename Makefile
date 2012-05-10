@@ -6,7 +6,6 @@ all: sample_css min_version debug_version downloads
 # Sample CSS Generation from LESS files
 
 SAMPLE_CSS_DIR = samples/resources/css
-SAMPLE_JS = $(wildcard samples/resources/js/sample*-client.js)
 COMMON_SAMPLE_LESS = $(SAMPLE_CSS_DIR)/sample-common.less
 COMMON_SAMPLE_CSS = $(patsubst %.less, %.css, $(COMMON_SAMPLE_LESS))
 SAMPLE_LESS = $(wildcard $(SAMPLE_CSS_DIR)/sample*-client.less)
@@ -94,6 +93,8 @@ clean:
 # Linting
 
 JSHINT = ./node_modules/jshint/bin/hint
+SAMPLE_JS = $(wildcard samples/resources/js/sample*-client.js)
+TEST_JS = $(wildcard test/tests/*.js)
 
 lint:
-	$(JSHINT) $(SRC_FILES) $(SAMPLE_JS)
+	$(JSHINT) $(SRC_FILES) $(SAMPLE_JS) $(TEST_JS)
