@@ -14,7 +14,7 @@
         ]);
 
         viewer = giclee.viewer.Viewer.create($("#canvas"), document);
-    }
+    };
 
     /**
      * We want the main viewer to resize with the window.

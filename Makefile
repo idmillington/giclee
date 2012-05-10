@@ -5,7 +5,8 @@ all: sample_css min_version debug_version downloads
 # ----------------------------------------------------------------------------
 # Sample CSS Generation from LESS files
 
-SAMPLE_CSS_DIR = samples/static/css
+SAMPLE_CSS_DIR = samples/resources/css
+SAMPLE_JS = $(wildcard samples/resources/js/sample*-client.js)
 COMMON_SAMPLE_LESS = $(SAMPLE_CSS_DIR)/sample-common.less
 COMMON_SAMPLE_CSS = $(patsubst %.less, %.css, $(COMMON_SAMPLE_LESS))
 SAMPLE_LESS = $(wildcard $(SAMPLE_CSS_DIR)/sample*-client.less)
@@ -31,7 +32,7 @@ SRC_FILES = src/utils.js src/datatypes.js src/document.js src/managers.js \
 MIN_NAME = giclee.min.js
 DEBUG_NAME = giclee.js
 OUT_DIR = out
-ADDITIONAL_DIRS = samples/static/js test/static/js
+ADDITIONAL_DIRS = samples/resources/js test/resources/js
 UGLIFY = node_modules/uglify-js/bin/uglifyjs
 
 
@@ -66,7 +67,7 @@ $(ADDITIONAL_DEBUG): $(DEBUG_OUT)
 JQUERY_NAME = jquery.min.js
 JQUERY_SRC = http://code.jquery.com/$(JQUERY_NAME)
 
-JQUERY_DIRS = samples/static/js test/static/js
+JQUERY_DIRS = samples/resources/js test/resources/js
 JQUERY_FILES = $(addsuffix /$(JQUERY_NAME), $(JQUERY_DIRS))
 JQUERY_TMP = /tmp/$(JQUERY_NAME)
 
@@ -95,4 +96,4 @@ clean:
 JSHINT = ./node_modules/jshint/bin/hint
 
 lint:
-	$(JSHINT) $(SRC_FILES)
+	$(JSHINT) $(SRC_FILES) $(SAMPLE_JS)
