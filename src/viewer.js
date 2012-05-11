@@ -146,22 +146,35 @@
     };
 
     // --------------------------------------------------------------------
-    // The viewer displays a document on a canvas. A viewer can be used
-    // to move around and zoom into some content, but cannot be used to
-    // edit the content.
+    // A display displays a document on a canvas. It is the base of other
+    // display elements (notably the viewer), but does not allow any
+    // interaction.
     // --------------------------------------------------------------------
 
-    var Viewer = ObjectBase.extend();
+    var Display = ObjectBase.extend();
 
     /**
-     * Creates a new viewer to connect the given canvas to the given
+     * Default options. Overriding this in subtypes is a little
+     * tricky, see Viewer._defaultOptions for details.
+     */
+    Display._defaultOptions = {
+    };
+
+    /**
+     * Creates a new display to connect the given canvas to the given
      * document.
      *
      * The given list of renderers are used to turn objects in the
      * document into a visual representation. They should be derived
      * from the Renderer object.
      */
-    Viewer.init = function($canvas, document, renderers) {
+    Display.init = function($canvas, document, renderers, options) {
+        this.events = giclee.managers.EventManager.create();
+
+        this.options = giclee.utils.objectConcat(
+            {}, this._defaultOptions, options
+        );
+
         this.$canvas = $canvas;
         this.canvas = $canvas.get(0);
         this.c = this.canvas.getContext("2d");
@@ -171,49 +184,15 @@
 
         this._initRenderers(renderers);
         this._initEvents();
+        this._initClearup();
 
         this.draw();
     };
 
     /**
-     * Initializes events.
-     */
-    Viewer._initEvents = function() {
-        var that = this;
-        this.$canvas.mousedown(function(event) {
-            var w = that.$canvas.width(), h = that.$canvas.height();
-
-            var dm = DragManager.create();
-            dm.setPos(that.pos);
-            dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, true);
-            dm.setLocks(false, true, false);
-            dm.setRotateScaleOverride(event.shiftKey);
-            dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
-
-            var move = function(event) {
-                dm.setRotateScaleOverride(event.shiftKey);
-                dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
-
-                that.pos = posCopy(dm.pos);
-                that.draw();
-            };
-
-            var up = function(event) {
-                dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
-
-                that.$canvas.unbind('mousemove', move);
-                that.$canvas.unbind('mouseup', up);
-            };
-
-            that.$canvas.bind('mousemove', move);
-            that.$canvas.bind('mouseup', up);
-        });
-    };
-
-    /**
      * Initializes the renderer lookup.
      */
-    Viewer._initRenderers = function(renderers) {
+    Display._initRenderers = function(renderers) {
         /*
          * Create a local function that can retrieve a valid renderer
          * for the given element. This needs to be a local function
@@ -249,9 +228,22 @@
     };
 
     /**
+     * This base object has no events to register, but this is
+     * overloaded in subobjects.
+     */
+    Display._initEvents = function() {
+    };
+
+    /**
+     * This base object has no other init to do, but subobjects might.
+     */
+    Display._initClearup = function() {
+    };
+
+    /**
      * Performs a complete redraw of the canvas.
      */
-    Viewer.draw = function() {
+    Display.draw = function() {
         var c = this.c;
         var w = this.$canvas.width(), h = this.$canvas.height();
 
@@ -262,7 +254,7 @@
     /**
      * Redraws the given part of the canvas.
      */
-    Viewer.redraw = function(x, y, w, h) {
+    Display.redraw = function(x, y, w, h) {
         var c = this.c;
         c.clearRect(x, y, w, h);
 
@@ -276,6 +268,62 @@
             renderer.renderGlobalCoords(c, posStack, aabb);
         }
     };
+
+    // --------------------------------------------------------------------
+    // The viewer displays a document on a canvas. A viewer can be used
+    // to move around and zoom into some content, but cannot be used to
+    // edit the content.
+    // --------------------------------------------------------------------
+
+    var Viewer = Display.extend();
+
+    /**
+     * Default options. Overriding this in subtypes is a little
+     * tricky, see Viewer._defaultOptions for details.
+     */
+    Viewer._defaultOptions = giclee.utils.objectConcat(
+        {}, Display._defaultOptions,
+        {
+            // Our options here.
+        });
+
+    /**
+     * Initializes events.
+     */
+    Viewer._initEvents = function() {
+        var that = this;
+        this.$canvas.mousedown(function(event) {
+            var w = that.$canvas.width(), h = that.$canvas.height();
+
+            var dm = DragManager.create();
+            dm.setPos(that.pos);
+            dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, true);
+            dm.setLocks(false, true, false);
+            dm.setRotateScaleOverride(event.shiftKey);
+            dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
+
+            var move = function(event) {
+                dm.setRotateScaleOverride(event.shiftKey);
+                dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
+
+                that.pos = posCopy(dm.pos);
+                that.draw();
+
+                that.events.notify("view-changed", that.pos);
+            };
+
+            var up = function(event) {
+                dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
+
+                that.$canvas.unbind('mousemove', move);
+                that.$canvas.unbind('mouseup', up);
+            };
+
+            that.$canvas.bind('mousemove', move);
+            that.$canvas.bind('mouseup', up);
+        });
+    };
+
 
     /**
      * Returns the renderers of the objects at the given global
@@ -298,12 +346,71 @@
     };
 
     // --------------------------------------------------------------------
+    // An overview is a type of display that shows the view bounds of
+    // another display component.
+    // --------------------------------------------------------------------
+
+    var Overview = Display.extend();
+
+    Overview._defaultOptions = giclee.utils.objectConcat(
+        {}, Display._defaultOptions,
+        {
+            viewBoxColor: "black",
+            viewBoxHighlight: "white"
+        });
+
+    Overview.init = function($canvas, display, renderers, options) {
+        this.display = display;
+        Display.init.call(this, $canvas, display.document, renderers, options);
+    };
+
+    Overview._initClearup = function() {
+        this.pos.s = 0.15;
+    };
+
+    Overview._initEvents = function() {
+        this.display.events.register("view-changed", this.draw, this);
+    };
+
+    /**
+     * Redraws the given part of the canvas.
+     */
+    Overview.redraw = function(x, y, w, h) {
+        Display.redraw.call(this, x, y, w, h);
+
+        // Draw the render bounds
+        var c = this.c;
+        var canvas = this.display.$canvas;
+        var canvasWidth = canvas.width();
+        var canvasHeight = canvas.height();
+        var pos = giclee.datatypes.posCreate(
+            -this.display.pos.x * this.pos.s / this.display.pos.s,
+            -this.display.pos.y * this.pos.s / this.display.pos.s,
+            0,
+            this.pos.s / this.display.pos.s
+        );
+
+        c.save();
+        giclee.datatypes.posSetTransform(pos, c);
+        console.log(JSON.stringify(pos, null, 4));
+        c.lineWidth = 3.0/pos.s;
+        c.strokeStyle = this.options.viewBoxColor;
+        c.strokeRect(0, 0, canvasWidth, canvasHeight);
+        c.lineWidth = 1.0/pos.s;
+        c.strokeStyle = this.options.viewBoxHighlight;
+        c.strokeRect(0, 0, canvasWidth, canvasHeight);
+        c.restore();
+    };
+
+    // --------------------------------------------------------------------
     // API
     // --------------------------------------------------------------------
 
     if (window.giclee === undefined) window.giclee = {};
     window.giclee.viewer = {
-        Viewer: Viewer
+        Display: Display,
+        Viewer: Viewer,
+        Overview: Overview
     };
 
 })(jQuery);

@@ -4,6 +4,78 @@
     var posCopy = giclee.datatypes.posCopy;
 
     // --------------------------------------------------------------------
+    // An event manager handles custom (i.e. non-DOM) events.
+    // --------------------------------------------------------------------
+
+    var EventManager = ObjectBase.create();
+
+    /**
+     * Event managers simply track listeners against event names, but
+     * they can be arranged hierarchically, so that an event manager
+     * will pass on its events to its parent. This is optional,
+     * however and usually not needed.
+     */
+    EventManager.init = function(parent) {
+        this.parent = parent;
+        this.listeners = {};
+    };
+
+    /**
+     * Register the given callback and optional this pointer to be
+     * notified when events of the given name occur.
+     */
+    EventManager.register = function(eventName, callback, thisPointer) {
+        // If we have one already, get rid of it.
+        this.deregister(eventName, callback, thisPointer);
+
+        var listeners = this.listeners[eventName];
+
+        // Make sure we have a listener set.
+        if (listeners === undefined) {
+            listeners = this.listeners[eventName] = [];
+        }
+
+        // Add this record.
+        listeners.push({callback:callback, context:thisPointer});
+    };
+
+    /**
+     * Remove the previously registered callback.
+     */
+    EventManager.deregister = function(eventName, callback, thisPointer) {
+        var listeners = this.listeners[eventName];
+        if (listeners === undefined) return;
+        for (var i = 0; i < listeners.length; i ++) {
+            var record = listeners[i];
+            if (record.callback===callback && record.context===thisPointer) {
+                listeners.splice(i, 1);
+                return;
+            }
+        }
+    };
+
+    /**
+     * Notify all listeners that the event has happened.
+     */
+    EventManager.notify = function(eventName, data) {
+        var listeners = this.listeners[eventName];
+
+        // Notify the listeners.
+        if (listeners !== undefined) {
+            var event = {name:eventName, data:data};
+            for (var i = 0; i < listeners.length; i++) {
+                var record = listeners[i];
+                record.callback.call(record.context, event);
+            }
+        }
+
+        // Notify a parent.
+        if (this.parent !== undefined) {
+            this.parent.notify(eventName, data);
+        }
+    };
+
+    // --------------------------------------------------------------------
     // Manages loading images in batches and caching the results.
     // --------------------------------------------------------------------
 
@@ -12,25 +84,20 @@
     /**
      * ImageManagers represent a set of images that need to be
      * loaded. Each image manager can be given a set of images to
-     * load, and will callback when all those images are loaded. The
-     * images themselves are kept in a global cache shared by all image
-     * managers.
+     * load, and will raise its 'loaded' event when all those images
+     * are loaded. The images themselves are kept in a global cache
+     * shared by all image managers.
      */
-    ImageManager.init = function(callback, callbackData, callbackThis) {
-        this.callback = {
-            callback: callback,
-            data: callbackData,
-            that: callbackThis
-        };
+    ImageManager.init = function() {
+        this.events = EventManager.create();
 
-        // Keep track of what we need to find before we can call the
-        // callback.
+        // Keep track of what we need to find before we can raise the event.
         this.waitingFor = {};
     };
 
     /**
      * Call this method to ask the manager to load it. When all queued
-     * images are loaded, the manager's callback will be notified.
+     * images are loaded, the event will be disptched.
      */
     ImageManager.getImage = function(url) {
         var record = ImageManager._images[url];
@@ -98,16 +165,9 @@
     ImageManager._imageLoaded = function(url) {
         delete this.waitingFor[url];
 
-        // If we're the last one we're looking for, call the callback.
+        // If we're the last one we're looking for, send the event.
         if ($.isEmptyObject(this.waitingFor)) {
-            var cb = this.callback;
-            if (cb.callback) {
-                if (cb.that) {
-                    cb.callback.apply(cb.that, cb.data);
-                } else {
-                    cb.callback(cb.data);
-                }
-            }
+            this.events.notify("loaded");
         }
     };
 
@@ -120,9 +180,9 @@
     /**
      * Manages drag and drop for images on the given container.
      */
-    ImageDropManager.init = function($container, dropCallback) {
+    ImageDropManager.init = function($container) {
         this.$container = $container;
-        this.callback = dropCallback;
+        this.events = EventManager.create();
 
         // Register events
         var that = this;
@@ -142,8 +202,7 @@
     };
 
     /**
-     * Handles a drop event, extracts the images and notifies the
-     * callback.
+     * Handles a drop event, extracts the images and throws the event.
      */
     ImageDropManager.drop = function(event) {
         // Make sure we stop if we crash.
@@ -165,11 +224,11 @@
                 var url = fileReader.result;
                 var image = new Image();
 
-                // Notify the callback when the image is built
+                // Throws the event when the image is built
                 // (should be pretty much instant).
                 image.onload = function() {
                     var filename = file.name?file.name:file.fileName;
-                    that.callback(image, filename);
+                    this.events.notify("image", filename);
                 };
 
                 // Start the transfer.
@@ -186,26 +245,19 @@
         return false;
     };
 
-
     // --------------------------------------------------------------------
-    // A resize manager keeps a target the same size as a container.
+    // A resize notifier calls back when a UI element changes size.
     // --------------------------------------------------------------------
 
-    var ResizeManager = ObjectBase.extend();
+    var ResizeNotifier = ObjectBase.extend();
 
-    /**
-     * Manages keeping a DOM element resized to the size of a given
-     * target. Sets both the absolute css width and height, and the
-     * HTML attributes of the element.
-     */
-    ResizeManager.init = function($resize, $container, callback) {
-        this.$resize = $resize;
-        this.$container = $container;
-        this.callback = callback;
+    ResizeNotifier.init = function($element) {
+        this.events = EventManager.create();
+        this.$element = $element;
 
         // Are we tracking the window?
         var isWindow = (
-            $container.get !== undefined && $container.get(0) == window
+            $element.get !== undefined && $element.get(0) == window
         );
 
         // Set up the resizing code.
@@ -219,17 +271,23 @@
     };
 
     /**
+     * This is called (and can be overridden) when the size changes,
+     * before the events are dispatched.
+     */
+    ResizeNotifier._resized = function(w, h) {
+    };
+
+    /**
      * Called when we have reason to think the size may have changed.
      */
-    ResizeManager._checkResize = function() {
-        var w = this.$container.width();
-        var h = this.$container.height();
+    ResizeNotifier._checkResize = function() {
+        var w = this.$element.width();
+        var h = this.$element.height();
         if (this.lastSize.w != w || this.lastSize.h != h) {
             this.lastSize.w = w;
             this.lastSize.h = h;
-            var wh = {width: w, height: h};
-            this.$resize.width(w).height(h).attr(wh).css(wh);
-            if (this.callback) this.callback(w, h);
+            this._resized(w, h);
+            this.events.notify("resize", {width:w, height:h});
         }
     };
 
@@ -237,9 +295,9 @@
      * If we're tracking the window size, we can register with the
      * window resize event.
      */
-    ResizeManager._initEventResize = function() {
+    ResizeNotifier._initEventResize = function() {
         var that = this;
-        this.$container.bind('resize', function() {
+        this.$element.bind('resize', function() {
             that._checkResize();
         });
     };
@@ -248,10 +306,37 @@
      * The resize event only fires on the window, so this method polls
      * the container to see when it changes size.
      */
-    ResizeManager._initPollingResize = function() {
+    ResizeNotifier._initPollingResize = function() {
         var that = this;
         setInterval(function() { that._checkResize(); }, 250);
     };
+
+
+    // --------------------------------------------------------------------
+    // A resize manager keeps a target the same size as a container.
+    // --------------------------------------------------------------------
+
+    var ResizeManager = ResizeNotifier.extend();
+
+    /**
+     * Manages keeping a DOM element resized to the size of a given
+     * target. Sets both the absolute css width and height, and the
+     * HTML attributes of the element.
+     */
+    ResizeManager.init = function($resize, $container) {
+        this.$resize = $resize;
+        ResizeNotifier.init.call(this, $container);
+    };
+
+    /**
+     * This is called (and can be overridden) when the size changes,
+     * before the event is dispatched.
+     */
+    ResizeManager._resized = function(w, h) {
+        var wh = {width: w, height: h};
+        this.$resize.width(w).height(h).attr(wh).css(wh);
+    };
+
 
     // --------------------------------------------------------------------
     // A drag manager allows dragging to affect a POS.
@@ -477,8 +562,10 @@
 
     if (window.giclee === undefined) window.giclee = {};
     window.giclee.managers = {
+        EventManager: EventManager,
         ImageManager: ImageManager,
         ImageDropManager: ImageDropManager,
+        ResizeNotifier: ResizeNotifier,
         ResizeManager: ResizeManager,
         DragManager: DragManager
     };
