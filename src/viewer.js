@@ -119,7 +119,7 @@
     Display.initPos = function(scaleLimit) {
         var document = this.document;
         var content = document.content;
-        if (content.length == 0) return;
+        if (content.length === 0) return;
         if (scaleLimit === undefined) scaleLimit = 1000.0;
 
         var ModelFactory = this.options.ModelFactory;

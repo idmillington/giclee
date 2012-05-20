@@ -233,7 +233,7 @@
      */
     AABB.createBounds = function() {
         var aabb;
-        if (arguments.length == 0) return AABB.create();
+        if (arguments.length === 0) return AABB.create();
         else {
             aabb = arguments[0].clone();
         }

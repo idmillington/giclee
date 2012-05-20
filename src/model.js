@@ -82,10 +82,10 @@
         if (element[this.modelProperty] === undefined) {
             var model = null;
 
-            var type = element['type'];
+            var type = element.type;
             if (type !== undefined) {
                 // See if we have a valid model class.
-                var ModelClass = this.typeMapping[element['type']];
+                var ModelClass = this.typeMapping[element.type];
                 if (ModelClass === undefined) {
                     console.warn("Type: '"+type+
                                  "' has no Model class, using default.");
