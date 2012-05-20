@@ -1,7 +1,9 @@
 (function($) {
     // Import
     var ObjectBase = giclee.utils.ObjectBase;
+    var objectConcat = giclee.utils.objectConcat;
 
+    var posCopy = giclee.datatypes.posCopy;
     var posConcat = giclee.datatypes.posConcat;
     var posInvert = giclee.datatypes.posInvert;
     var posTransform = giclee.datatypes.posTransform;
@@ -60,6 +62,18 @@
             ModelFactory._sharedInstance = ModelFactory.create(Model);
         }
         return ModelFactory._sharedInstance;
+    };
+
+    /**
+     * Cloning a factory is useful if you want to have the same
+     * mappings as another, plus some extras.
+     */
+    ModelFactory.clone = function() {
+        var factory = ModelFactor.create(
+            this.DefaultModelClass, this.modelProperty
+        );
+        objectConcat(factory.typeMapping, this.typeMapping);
+        return factory;
     };
 
     /**
@@ -143,7 +157,12 @@
      * front of it. This can be undone with restoreStack.
      */
     Model.updateStack = function(posStack) {
-        var pos = posConcat(posStack[0], this.element.pos);
+        var pos;
+        if (this.element.pos !== undefined) {
+            pos = posConcat(posStack[0], this.element.pos);
+        } else {
+            pos = posCopy(posStack[0]);
+        }
         posStack.unshift(pos);
         return pos;
     };
