@@ -7,6 +7,8 @@
     var posTransform = giclee.datatypes.posTransform;
     var posSetTransform = giclee.datatypes.posSetTransform;
 
+    var AABB = giclee.datatypes.AABB;
+
     // ----------------------------------------------------------------------
     // Platform dependency shims
     // ----------------------------------------------------------------------
@@ -135,41 +137,79 @@
     };
 
     /**
+     * Updates the pos stack adding this element's global pos to the
+     * front of it. This can be undone with restoreStack.
+     */
+    Model.updateStack = function(posStack) {
+        var pos = posConcat(posStack[0], this.element.pos);
+        posStack.unshift(pos);
+        return pos;
+    };
+
+    /**
+     * Removes the head of the given pos stack.
+     */
+    Model.resetStack = function(posStack) {
+        posStack.shift();
+    };
+
+    /**
      * Renders this object to the given context. This is normally not
      * overridden, since it provides top level support for things like
      * in-bounds detection, Position-Orientation-Scale and
      * filters. Instead, override the renderLocalCoords function.
      */
-    Model.renderGlobalCoords = function(c, posStack, globalBounds) {
-        var pos = this.element.pos;
-        pos = posConcat(posStack[0], pos);
+    Model.renderGlobalCoords = function(c, posStack, globalBounds, options) {
+        var pos = this.updateStack(posStack);
 
-        // TODO: Calculate the local bounds from the transform and
-        // global bounds.
-        var localBounds;
+        // Get our bounds in global coords and check if we need drawing.
+        var boundsInLocal = this.getLocalBounds(posStack, options);
+        var boundsInGlobal = boundsInLocal.getTransformed(pos);
+        if (boundsInGlobal.overlaps(globalBounds)) {
 
-        // Set the transform.
-        c.save();
-        posStack.unshift(pos);
-        posSetTransform(pos, c);
+            // Set the transform.
+            c.save();
+            posSetTransform(pos, c);
 
-        // Draw the object.
-        this.renderLocalCoords(c, posStack, localBounds);
+            // Draw the object.
+            this.renderLocalCoords(c, posStack, globalBounds);
 
-        // Remove the transform.
-        posStack.shift();
-        c.restore();
+            // Remove the transform.
+            c.restore();
 
-        // TODO: Handle filters.
+            // TODO: Handle filters.
+        }
+        this.resetStack(posStack);
     };
 
     /**
      * Override this function to do the actual rendering for this
      * object.
      */
-    Model.renderLocalCoords = function(c, posStack, localBounds) {
-        // The base implemenation draws a placeholder-rectangle.
-        c.fillRect(-50, -50, 100, 100);
+    Model.renderLocalCoords = function(c, posStack, globalBounds, options) {
+        // The base implemenation draws a black placeholder-rectangle.
+        c.fillStyle = "black";
+        c.fillRect(-50, -50, 140, 120);
+    };
+
+    /**
+     * Returns a bounding area in world coordinates for this object.
+     */
+    Model.getGlobalBounds = function(posStack, options) {
+        var pos = this.updateStack(posStack);
+        var localBounds = this.getLocalBounds(posStack, options);
+        var globalBounds = localBounds.getTransformed(pos);
+        this.resetStack(posStack);
+        return globalBounds;
+    };
+
+    /**
+     * Override this function to return a local-space bounding object
+     * for this element.
+     */
+    Model.getLocalBounds = function(posStack, options) {
+        // The base implementation's rectangle.
+        return AABB.create(-50, -50, 90, 70);
     };
 
     /**
@@ -182,17 +222,15 @@
      * better ways to calculate the same thing.
      */
     Model.isGlobalPointInObject = function(c, posStack, globalPoint) {
-        var pos = this.element.pos;
-        pos = posConcat(posStack[0], pos);
+        var pos = this.updateStack(posStack);
 
         // Calculate the local point.
         var globalToLocal = posInvert(pos);
         var localPoint = posTransform(globalToLocal, globalPoint);
 
         // Calculate the result.
-        posStack.unshift(pos);
         var result = this.isLocalPointInObject(c, posStack, localPoint);
-        posStack.shift();
+        this.retoreStack(posStack);
         return result;
     };
 

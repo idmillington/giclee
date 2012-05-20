@@ -4,7 +4,7 @@
 
     var ModelFactory = giclee.model.ModelFactory;
 
-    var aabbCreate = giclee.datatypes.aabbCreate;
+    var AABB = giclee.datatypes.AABB;
 
     var posCreate = giclee.datatypes.posCreate;
     var posCopy = giclee.datatypes.posCopy;
@@ -74,7 +74,9 @@
      * tricky, see Viewer._defaultOptions for details.
      */
     Display._defaultOptions = {
-        ModelFactory: ModelFactory.getGlobal()
+        ModelFactory: ModelFactory.getGlobal(),
+        initPOS: true,
+        initPOSScale: 1000.0
     };
 
     /**
@@ -102,7 +104,44 @@
         this._initEvents();
         this._initClearup();
 
+        if (this.options.initPOS) {
+            this.initPOS(this.options.initPOSScale);
+        }
+
         this.draw();
+    };
+
+    /**
+     * Sets the pos of the display so that the content in its document
+     * is as large as possible, and centered. The scale is limited so
+     * it is no bigger than the scale given.
+     */
+    Display.initPOS = function(scaleLimit) {
+        var content = this.document.content;
+        if (content.length == 0) return;
+        if (scaleLimit === undefined) scaleLimit = 1000.0;
+
+        var ModelFactory = this.options.ModelFactory;
+        var posStack = [posCreate()];
+        var bounds = [];
+        for (var i = 0; i < content.length; i++) {
+            var element = content[i];
+            var model = ModelFactory.ensureAndGetModel(element);
+            bounds.push(model.getGlobalBounds(posStack));
+        }
+
+        var aabb = AABB.createBounds.apply(AABB, bounds);
+        var xywh = aabb.getXYWH();
+
+        var w = this.$canvas.width(), h = this.$canvas.height();
+        var scale = Math.min(scaleLimit, w/xywh[2], h/xywh[3]);
+
+        var cx = (aabb.l + aabb.r)*0.5*scale;
+        var cy = (aabb.t + aabb.b)*0.5*scale;
+        this.pos.x = w*0.5 - cx;
+        this.pos.y = h*0.5 - cy;
+        this.pos.o = 0.0;
+        this.pos.s = scale;
     };
 
     /**
@@ -124,22 +163,22 @@
     Display.draw = function() {
         var c = this.c;
         var w = this.$canvas.width(), h = this.$canvas.height();
+        var aabb = AABB.create(0, 0, w, h);
 
         c.setTransform(1, 0, 0, 1, 0, 0);
-        this.redraw(0, 0, w, h);
+        this.redraw(aabb);
     };
 
     /**
      * Redraws the given part of the canvas.
      */
-    Display.redraw = function(x, y, w, h) {
+    Display.redraw = function(aabb) {
         var ModelFactory = this.options.ModelFactory;
 
         var c = this.c;
-        c.clearRect(x, y, w, h);
+        c.clearRect.apply(c, aabb.getXYWH());
 
         var posStack = [this.pos];
-        var aabb = aabbCreate(x, y, w, h);
 
         var content = this.document.content;
         for (var i = 0; i < content.length; i++) {
@@ -165,6 +204,7 @@
         {}, Display._defaultOptions,
         {
             // Our options here.
+            initPOSScale: 1.0
         });
 
     /**
@@ -237,6 +277,7 @@
     Overview._defaultOptions = giclee.utils.objectConcat(
         {}, Display._defaultOptions,
         {
+            initPOSScale: 0.15,
             viewBoxColor: "black",
             viewBoxHighlight: "white"
         });
@@ -247,7 +288,6 @@
     };
 
     Overview._initClearup = function() {
-        this.pos.s = 0.15;
     };
 
     Overview._initEvents = function() {
@@ -257,30 +297,37 @@
     /**
      * Redraws the given part of the canvas.
      */
-    Overview.redraw = function(x, y, w, h) {
-        Display.redraw.call(this, x, y, w, h);
+    Overview.redraw = function(aabb) {
+        Display.redraw.call(this, aabb);
+
+        // Figure out the bounds of our linked display's window
+        var displayCanvas = this.display.$canvas;
+        var displayCanvasWidth = displayCanvas.width();
+        var displayCanvasHeight = displayCanvas.height();
+
+        var relativeScale = this.pos.s / this.display.pos.s;
+        var x = -this.display.pos.x * relativeScale;
+        var y = -this.display.pos.y * relativeScale;
+        var o = this.pos.o - this.display.pos.o;
+        var cos = Math.cos(o);
+        var sin = Math.sin(o);
+        var pos = giclee.datatypes.posCreate(
+            cos*x - sin*y + this.pos.x,
+            sin*x + cos*y + this.pos.y,
+            o,
+            relativeScale
+        );
 
         // Draw the render bounds
         var c = this.c;
-        var canvas = this.display.$canvas;
-        var canvasWidth = canvas.width();
-        var canvasHeight = canvas.height();
-        var pos = giclee.datatypes.posCreate(
-            -this.display.pos.x * this.pos.s / this.display.pos.s,
-            -this.display.pos.y * this.pos.s / this.display.pos.s,
-            0,
-            this.pos.s / this.display.pos.s
-        );
-
         c.save();
         giclee.datatypes.posSetTransform(pos, c);
-
         c.lineWidth = 3.0/pos.s;
         c.strokeStyle = this.options.viewBoxColor;
-        c.strokeRect(0, 0, canvasWidth, canvasHeight);
+        c.strokeRect(0, 0, displayCanvasWidth, displayCanvasHeight);
         c.lineWidth = 1.0/pos.s;
         c.strokeStyle = this.options.viewBoxHighlight;
-        c.strokeRect(0, 0, canvasWidth, canvasHeight);
+        c.strokeRect(0, 0, displayCanvasWidth, displayCanvasHeight);
         c.restore();
     };
 

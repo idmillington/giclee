@@ -1,12 +1,10 @@
 (function() {
+    // Import
+    var ObjectBase = giclee.utils.ObjectBase;
+
     /*
      * This module contains some data types used in the rest of the
-     * system. They are not implemented as a derived type, because
-     * they are commonly used in JSON data, and so need to be raw
-     * objects. Instead they are 'object oriented' by virtue of the
-     * sets of functions which manipulate them, namespaced by the
-     * datatype. This approach is common in object-oriented C
-     * programs.
+     * system.
      */
 
     // ----------------------------------------------------------------------
@@ -19,7 +17,12 @@
      * space. The orientation is given in radians. The translation is
      * considered to be applied before orientation and scale (because
      * scale is isotropic, the order of scale+orientation is
-     * irrelevant).
+     * irrelevant). They are not implemented as a derived type, because
+     * they are commonly used in JSON data, and so need to be raw
+     * objects. Instead they are 'object oriented' by virtue of the
+     * sets of functions which manipulate them, namespaced by the
+     * datatype. This approach is common in object-oriented C
+     * programs.
      */
 
     /**
@@ -94,6 +97,14 @@
     };
 
     /**
+     * Makes sure the orientation of the pos is in normal range.
+     */
+    var posNormalize = function(pos) {
+        while (pos.o > Math.PI) pos.o -= Math.PI * 2.0;
+        while (pos.o <= -Math.PI) pos.o += Math.PI * 2.0;
+    };
+
+    /**
      * Creates a pos which represents a transform where the given two
      * points are moved between their original and current locations,
      * so posTransform(pos, original1) = current1, and
@@ -121,8 +132,8 @@
             var originalTheta = Math.atan2(originalOffset.y, originalOffset.x);
             var currentTheta = Math.atan2(currentOffset.y, currentOffset.x);
             var deltaO = currentTheta - originalTheta;
-            while (deltaO < -Math.PI) deltaO += 2*Math.PI;
             while (deltaO > Math.PI) deltaO -= 2*Math.PI;
+            while (deltaO <= -Math.PI) deltaO += 2*Math.PI;
             pos.o = deltaO;
         }
 
@@ -149,20 +160,99 @@
     // ----------------------------------------------------------------------
 
     /*
-     * Axis-Aligned Bounding Boxes (AABB) are objects with an x, y, w,
-     * h, coordinates.
+     * Axis-Aligned Bounding Boxes (AABB) are objects with extents
+     * along x and y axes. We do use inheritance here, because these
+     * are normally contained in a model instance.
      */
+    var AABB = ObjectBase.extend();
+
+    AABB.init = function(l, t, r, b) {
+        this.l = (l!==undefined)?l:0;
+        this.t = (t!==undefined)?t:0;
+        this.r = (r!==undefined)?r:0;
+        this.b = (l!==undefined)?b:0;
+    };
 
     /**
-     * Creates a new AABB.
+     * Returns a new AABB with the same properties as this one.
      */
-    var aabbCreate = function(x, y, w, h) {
-        return {
-            x:(x!==undefined)?x:0,
-            y:(y!==undefined)?y:0,
-            w:(w!==undefined)?w:0,
-            h:(h!==undefined)?h:0
-        };
+    AABB.clone = function() {
+        return AABB.create(this.l, this.t, this.r, this.b);
+    };
+
+    /**
+     * Draw functions use x,y,w,h, use this to generate those values.
+     */
+    AABB.getXYWH = function() {
+        return [this.l, this.t, this.r-this.l, this.b-this.t];
+    };
+
+    /**
+     * Returns a new AABB which encloses this AABB, transformed by the
+     * given pos.
+     */
+    AABB.getTransformed = function(pos) {
+        posNormalize(pos);
+        var cos = pos.s*Math.cos(pos.o);
+        var sin = pos.s*Math.sin(pos.o);
+
+        if (pos.o < -Math.PI * 0.5) {
+            return AABB.create(
+                cos*this.r - sin*this.t + pos.x,
+                sin*this.r + cos*this.b + pos.y,
+                cos*this.l - sin*this.b + pos.x,
+                sin*this.l + cos*this.t + pos.y
+            );
+        } else if (pos.o < 0) {
+            return AABB.create(
+                cos*this.l - sin*this.t + pos.x,
+                sin*this.r + cos*this.t + pos.y,
+                cos*this.r - sin*this.b + pos.x,
+                sin*this.l + cos*this.b + pos.y
+            );
+        } else if (pos.o > Math.PI * 0.5) {
+            return AABB.create(
+                cos*this.r - sin*this.b + pos.x,
+                sin*this.l + cos*this.b + pos.y,
+                cos*this.l - sin*this.t + pos.x,
+                sin*this.r + cos*this.t + pos.y
+            );
+        } else {
+            return AABB.create(
+                cos*this.l - sin*this.b + pos.x,
+                sin*this.l + cos*this.t + pos.y,
+                cos*this.r - sin*this.t + pos.x,
+                sin*this.r + cos*this.b + pos.y
+            );
+        }
+    };
+
+    /**
+     * Call this class method with any number of AABB arguments, to
+     * return bounds that enclose all given bounding areas.
+     */
+    AABB.createBounds = function() {
+        var aabb;
+        if (arguments.length == 0) return AABB.create();
+        else {
+            aabb = arguments[0].clone();
+        }
+        for (var i = 1; i < arguments.length; i++) {
+            var thisAABB = arguments[i];
+            if (aabb.l > thisAABB.l) aabb.l = thisAABB.l;
+            if (aabb.t > thisAABB.t) aabb.t = thisAABB.t;
+            if (aabb.r < thisAABB.r) aabb.r = thisAABB.r;
+            if (aabb.b < thisAABB.b) aabb.b = thisAABB.b;
+        }
+        return aabb;
+    };
+
+    /**
+     * Returns true if this AABB overlaps the given other.
+     */
+    AABB.overlaps = function(other) {
+        return other.l < this.r && other.r > this.l &&
+            other.t < this.b && other.b > this.t;
     };
 
     // --------------------------------------------------------------------
@@ -178,8 +268,9 @@
         posTransform: posTransform,
         posSetTransform: posSetTransform,
         posFromPoints: posFromPoints,
+        posNormalize: posNormalize,
 
-        aabbCreate: aabbCreate
+        AABB: AABB
     };
 
 })();
