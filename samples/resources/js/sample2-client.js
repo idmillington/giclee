@@ -31,6 +31,7 @@
             "resize", function() { if (viewer !== undefined) viewer.draw(); }
         );
     };
+
     /**
      * Top level initialization.
      */

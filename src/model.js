@@ -78,7 +78,7 @@
      * checked. If it is not defined, then it will be set by this
      * method.
      */
-    ModelFactory.ensureAndGetModel = function(element) {
+    ModelFactory.ensureAndGetModel = function(element, parent) {
         if (element[this.modelProperty] === undefined) {
             var model = null;
 
@@ -93,7 +93,7 @@
                 }
 
                 // Create the model.
-                model = ModelClass.create(element);
+                model = ModelClass.create(element, parent);
 
                 // Recurse into the element.
                 this.ensureModelsInChildren(element);
@@ -114,10 +114,10 @@
         for (var key in element) {
             var value = element[key];
             if ($.isPlainObject(value)) {
-                this.ensureAndGetModel(value);
+                this.ensureAndGetModel(value, element);
             } else if ($.isArray(value)) {
                 for (var i = 0; i < value.length; i++) {
-                    this.ensureAndGetModel(value[i]);
+                    this.ensureAndGetModel(value[i], element);
                 }
             }
         }
@@ -130,10 +130,12 @@
     var Model = ObjectBase.extend();
 
     /**
-     * Creates a model for the given element.
+     * Creates a model for the given element. Parent is used to pass
+     * events along.
      */
-    Model.init = function(element) {
+    Model.init = function(element, parent) {
         this.element = element;
+        this.parent = parent;
     };
 
     /**

@@ -117,7 +117,8 @@
      * it is no bigger than the scale given.
      */
     Display.initPos = function(scaleLimit) {
-        var content = this.document.content;
+        var document = this.document;
+        var content = document.content;
         if (content.length == 0) return;
         if (scaleLimit === undefined) scaleLimit = 1000.0;
 
@@ -126,7 +127,7 @@
         var bounds = [];
         for (var i = 0; i < content.length; i++) {
             var element = content[i];
-            var model = ModelFactory.ensureAndGetModel(element);
+            var model = ModelFactory.ensureAndGetModel(element, document);
             bounds.push(model.getGlobalBounds(posStack));
         }
 
@@ -180,10 +181,11 @@
 
         var posStack = [this.pos];
 
-        var content = this.document.content;
+        var document = this.document;
+        var content = document.content;
         for (var i = 0; i < content.length; i++) {
             var element = content[i];
-            var model = ModelFactory.ensureAndGetModel(element);
+            var model = ModelFactory.ensureAndGetModel(element, document);
             model.renderGlobalCoords(c, posStack, aabb);
         }
     };
@@ -256,10 +258,11 @@
         var c = this.c;
 
         var result = [];
-        var content = this.document.content;
+        var document = this.document;
+        var content = document.content;
         for (var i = 0; i < content.length; i++) {
             var element = content[i];
-            var model = ModelFactory.ensureAndGetModel(element);
+            var model = ModelFactory.ensureAndGetModel(element, document);
             if (model.isGlobalPointInObject(c, posStack, xy)) {
                 result.push(model);
             }
