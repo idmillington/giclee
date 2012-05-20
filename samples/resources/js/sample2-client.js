@@ -28,7 +28,10 @@
             $(window)
         );
         resize.events.register(
-            "resize", function() { if (viewer !== undefined) viewer.draw(); }
+            "resize", function() {
+                if (viewer !== undefined) viewer.draw();
+                if (overview !== undefined) overview.draw();
+            }
         );
     };
 
