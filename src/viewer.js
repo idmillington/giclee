@@ -7,7 +7,7 @@
     var AABB = giclee.datatypes.AABB;
 
     var posCreate = giclee.datatypes.posCreate;
-    var posCopy = giclee.datatypes.posCopy;
+    var posClone = giclee.datatypes.posClone;
     var posConcat = giclee.datatypes.posConcat;
     var posInvert = giclee.datatypes.posInvert;
     var posTransform = giclee.datatypes.posTransform;
@@ -228,7 +228,7 @@
                 dm.setRotateScaleOverride(event.shiftKey);
                 dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
 
-                that.pos = posCopy(dm.pos);
+                that.pos = posClone(dm.pos);
                 that.draw();
 
                 that.events.notify("view-changed", that.pos);

@@ -1,7 +1,7 @@
 (function($) {
     // Import
     var ObjectBase = giclee.utils.ObjectBase;
-    var posCopy = giclee.datatypes.posCopy;
+    var posClone = giclee.datatypes.posClone;
 
     // --------------------------------------------------------------------
     // An event manager handles custom (i.e. non-DOM) events.
@@ -367,7 +367,7 @@
         this._update();
 
         // Set the initial position to be the current position.
-        this.initialPos = posCopy(this.pos);
+        this.initialPos = posClone(this.pos);
 
         // Now go through all touches and make the inital be the current.
         for (var id in this.touchLookup) {
@@ -478,8 +478,8 @@
      * this is done before any touches are recognized.
      */
     DragManager.setPos = function(pos) {
-        this.initialPos = posCopy(pos);
-        this.pos = posCopy(pos);
+        this.initialPos = posClone(pos);
+        this.pos = posClone(pos);
         this._commit();
     };
 

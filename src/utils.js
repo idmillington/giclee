@@ -45,7 +45,7 @@
 
     /**
      * Non-recursively add the properties of the given arguments to
-     * the given object.
+     * the given object. Returns the target, as well as modifying it.
      */
     var objectConcat = function(target) {
         for (var i = 1; i < arguments.length; i++) {

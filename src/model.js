@@ -3,7 +3,7 @@
     var ObjectBase = giclee.utils.ObjectBase;
     var objectConcat = giclee.utils.objectConcat;
 
-    var posCopy = giclee.datatypes.posCopy;
+    var posClone = giclee.datatypes.posClone;
     var posConcat = giclee.datatypes.posConcat;
     var posInvert = giclee.datatypes.posInvert;
     var posTransform = giclee.datatypes.posTransform;
@@ -161,7 +161,7 @@
         if (this.element.pos !== undefined) {
             pos = posConcat(posStack[0], this.element.pos);
         } else {
-            pos = posCopy(posStack[0]);
+            pos = posClone(posStack[0]);
         }
         posStack.unshift(pos);
         return pos;

@@ -40,7 +40,7 @@
     /**
      * Returns a new copy of the given pos.
      */
-    var posCopy = function(pos) {
+    var posClone = function(pos) {
         return {x:pos.x, y:pos.y, o:pos.o, s:pos.s};
     };
 
@@ -262,7 +262,7 @@
     if (window.giclee === undefined) window.giclee = {};
     window.giclee.datatypes = {
         posCreate: posCreate,
-        posCopy: posCopy,
+        posClone: posClone,
         posConcat: posConcat,
         posInvert: posInvert,
         posTransform: posTransform,
