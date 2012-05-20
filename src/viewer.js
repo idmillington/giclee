@@ -75,8 +75,8 @@
      */
     Display._defaultOptions = {
         ModelFactory: ModelFactory.getGlobal(),
-        initPOS: true,
-        initPOSScale: 1000.0
+        initPos: true,
+        initPosScale: 1000.0
     };
 
     /**
@@ -104,8 +104,8 @@
         this._initEvents();
         this._initClearup();
 
-        if (this.options.initPOS) {
-            this.initPOS(this.options.initPOSScale);
+        if (this.options.initPos) {
+            this.initPos(this.options.initPosScale);
         }
 
         this.draw();
@@ -116,7 +116,7 @@
      * is as large as possible, and centered. The scale is limited so
      * it is no bigger than the scale given.
      */
-    Display.initPOS = function(scaleLimit) {
+    Display.initPos = function(scaleLimit) {
         var content = this.document.content;
         if (content.length == 0) return;
         if (scaleLimit === undefined) scaleLimit = 1000.0;
@@ -198,13 +198,13 @@
 
     /**
      * Default options. Overriding this in subtypes is a little
-     * tricky, see Viewer._defaultOptions for details.
+     * tricky.
      */
     Viewer._defaultOptions = giclee.utils.objectConcat(
         {}, Display._defaultOptions,
         {
             // Our options here.
-            initPOSScale: 1.0
+            initPosScale: 1.0
         });
 
     /**
@@ -277,7 +277,7 @@
     Overview._defaultOptions = giclee.utils.objectConcat(
         {}, Display._defaultOptions,
         {
-            initPOSScale: 0.15,
+            initPosScale: 0.15,
             viewBoxColor: "black",
             viewBoxHighlight: "white"
         });
@@ -295,6 +295,35 @@
     };
 
     /**
+     * Given the Pos of the linked display, figures out the pos of the
+     * view bounding rectangle that needs to be drawn.
+     */
+    Overview._viewBoundsPosFromDisplayPos = function(displayPos) {
+        var relativeScale = this.pos.s / displayPos.s;
+        var x = -displayPos.x * relativeScale;
+        var y = -displayPos.y * relativeScale;
+        var o = this.pos.o - displayPos.o;
+        var cos = Math.cos(o);
+        var sin = Math.sin(o);
+        return giclee.datatypes.posCreate(
+            cos*x - sin*y + this.pos.x,
+            sin*x + cos*y + this.pos.y,
+            o,
+            relativeScale
+        );
+    };
+
+    /**
+     * Given the Pos of the view boundig rectangle, calculates the pos
+     * that should be set for the linked display. This is used to
+     * update the linked display when moving or scaling the view
+     * bounding rectangle.
+     */
+    Overview._displayPosFromViewBoundsPos = function(viewBoundsPos) {
+        // TODO
+    };
+
+    /**
      * Redraws the given part of the canvas.
      */
     Overview.redraw = function(aabb) {
@@ -304,19 +333,7 @@
         var displayCanvas = this.display.$canvas;
         var displayCanvasWidth = displayCanvas.width();
         var displayCanvasHeight = displayCanvas.height();
-
-        var relativeScale = this.pos.s / this.display.pos.s;
-        var x = -this.display.pos.x * relativeScale;
-        var y = -this.display.pos.y * relativeScale;
-        var o = this.pos.o - this.display.pos.o;
-        var cos = Math.cos(o);
-        var sin = Math.sin(o);
-        var pos = giclee.datatypes.posCreate(
-            cos*x - sin*y + this.pos.x,
-            sin*x + cos*y + this.pos.y,
-            o,
-            relativeScale
-        );
+        var pos = this._viewBoundsPosFromDisplayPos(this.display.pos);
 
         // Draw the render bounds
         var c = this.c;
