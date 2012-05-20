@@ -15,7 +15,7 @@
 
         viewer = giclee.viewer.Viewer.create($("#canvas"), document);
         overview = giclee.viewer.Overview.create(
-            $("#overview"), viewer, undefined, {viewBoxColor:"#cc0000"}
+            $("#overview"), viewer, {viewBoxColor:"#cc0000"}
         );
     };
 

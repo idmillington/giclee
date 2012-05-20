@@ -26,7 +26,7 @@ sample_css: $(SAMPLE_CSS) $(COMMON_SAMPLE_CSS)
 # dependencies.
 
 SRC_FILES = src/utils.js src/datatypes.js src/document.js src/managers.js \
-	src/viewer.js src/ui.js
+	src/model.js src/viewer.js src/ui.js
 
 MIN_NAME = giclee.min.js
 DEBUG_NAME = giclee.js
