@@ -189,7 +189,7 @@
     Model.renderLocalCoords = function(c, posStack, globalBounds, options) {
         // The base implemenation draws a black placeholder-rectangle.
         c.fillStyle = "black";
-        c.fillRect(-50, -50, 140, 120);
+        c.fillRect(-50, -50, 100, 100);
     };
 
     /**
@@ -209,7 +209,7 @@
      */
     Model.getLocalBounds = function(posStack, options) {
         // The base implementation's rectangle.
-        return AABB.create(-50, -50, 90, 70);
+        return AABB.create(-50, -50, 50, 50);
     };
 
     /**
