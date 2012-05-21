@@ -38,8 +38,9 @@
     })();
 
     /**
-     * Test for and correct Mozilla's PointInPath bug (credit:
-     * stackoverflow).
+     * Test for and correct Mozilla's PointInPath bug (see
+     * https://bugzilla.mozilla.org/show_bug.cgi?id=405300 for bug and
+     * solution).
      */
     (function() {
         // Create a temporary canvas.
@@ -64,9 +65,14 @@
 
     /**
      * Test and patch the jquery event handler to add offsetX and
-     * offsetY on platforms that don't have it.
+     * offsetY on platforms that don't have it (see
+     * http://bugs.jquery.com/ticket/8523 for bug and solution).
      */
     (function() {
+        // Wrap the default filter with code to additionally set
+        // offsetX/Y. NB: $.event.mouseHooks.filter is a
+        // non-documented API for jQuery, so this may need to be
+        // changed with new versions!
         var filter = $.event.mouseHooks.filter;
         $.event.mouseHooks.filter = function(event, original) {
             event = filter(event, original);
