@@ -117,26 +117,6 @@
     };
 
     // ----------------------------------------------------------------------
-    // Function manipulation
-    // ----------------------------------------------------------------------
-
-    /**
-     * Add a hook to surround a function call with others. The first
-     * function can return new arguments for the other steps, and the
-     * last can modify the result.
-     */
-    var augmentFunction = function(current, before, after) {
-        return function() {
-            var extraArgs;
-            if (before) extraArgs = before.apply(this, arguments);
-            if (extraArgs === undefined) extraArgs = arguments;
-            var result = current.apply(this, extraArgs);
-            if (after) result = after.apply(this, [result].concat(extraArgs));
-            return result;
-        };
-    };
-
-    // ----------------------------------------------------------------------
     // ID generation
     // ----------------------------------------------------------------------
 
