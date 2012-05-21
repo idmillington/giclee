@@ -62,6 +62,24 @@
         }
     })();
 
+    /**
+     * Test and patch the jquery event handler to add offsetX and
+     * offsetY on platforms that don't have it.
+     */
+    (function() {
+        var filter = $.event.mouseHooks.filter;
+        $.event.mouseHooks.filter = function(event, original) {
+            event = filter(event, original);
+            if (typeof event.offsetX === "undefined" ||
+                typeof event.offsetY === "undefined") {
+                var targetOffset = $(event.target).offset();
+                event.offsetX = event.pageX - targetOffset.left;
+                event.offsetY = event.pageY - targetOffset.top;
+            }
+            return event;
+        };
+    })();
+
     // --------------------------------------------------------------------
     // A display displays a document on a canvas. It is the base of other
     // display elements (notably the viewer), but does not allow any
