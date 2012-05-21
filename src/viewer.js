@@ -295,6 +295,44 @@
 
     Overview._initEvents = function() {
         this.display.events.register("view-changed", this.draw, this);
+
+        // Handle dragging (interpreted as a drag of the linked view's
+        // bounding area).
+        var that = this;
+        this.$canvas.mousedown(function(event) {
+            var w = that.display.$canvas.width();
+            var h = that.display.$canvas.height();
+
+            var viewBoundsPos =
+                that._viewBoundsPosFromDisplayPos(that.display.pos);
+
+            var dm = DragManager.create();
+            dm.setPos(viewBoundsPos);
+            dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, false);
+            dm.setLocks(false, true, false);
+            dm.setRotateScaleOverride(event.shiftKey);
+            dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
+
+            var move = function(event) {
+                dm.setRotateScaleOverride(event.shiftKey);
+                dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
+
+                that.display.pos =
+                    that._displayPosFromViewBoundsPos(dm.pos);
+                that.display.draw();
+                that.display.events.notify("view-changed", that.pos);
+            };
+
+            var up = function(event) {
+                dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
+
+                that.$canvas.unbind('mousemove', move);
+                that.$canvas.unbind('mouseup', up);
+            };
+
+            that.$canvas.bind('mousemove', move);
+            that.$canvas.bind('mouseup', up);
+        });
     };
 
     /**
@@ -323,7 +361,19 @@
      * bounding rectangle.
      */
     Overview._displayPosFromViewBoundsPos = function(viewBoundsPos) {
-        // TODO
+        var oos = 1.0 / viewBoundsPos.s;
+        var relativeScale = this.pos.s * oos;
+        var x = (this.pos.x - viewBoundsPos.x) * oos;
+        var y = (this.pos.y - viewBoundsPos.y) * oos;
+
+        var cos = Math.cos(viewBoundsPos.o);
+        var sin = Math.sin(viewBoundsPos.o);
+        return giclee.datatypes.posCreate(
+            cos*x + sin*y,
+            -sin*x + cos*y,
+            this.pos.o - viewBoundsPos.o,
+            relativeScale
+        );
     };
 
     /**

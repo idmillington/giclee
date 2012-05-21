@@ -2,6 +2,7 @@
     // Import
     var ObjectBase = giclee.utils.ObjectBase;
     var posClone = giclee.datatypes.posClone;
+    var posTransform = giclee.datatypes.posTransform;
 
     // --------------------------------------------------------------------
     // An event manager handles custom (i.e. non-DOM) events.
@@ -351,6 +352,7 @@
         this.lockOrientation = false;
         this.lockScale = false;
 
+        this.osOrigin = {x:0, y:0};
         this.touchLookup = {};
         this.activeTouches = 0;
     };
@@ -368,6 +370,11 @@
 
         // Set the initial position to be the current position.
         this.initialPos = posClone(this.pos);
+        if (this.osOriginIsGlobal) {
+            this.initialOsOrigin = this.osOrigin;
+        } else {
+            this.initialOsOrigin = posTransform(this.pos, this.osOrigin);
+        }
 
         // Now go through all touches and make the inital be the current.
         for (var id in this.touchLookup) {
@@ -436,12 +443,18 @@
         for (var id in this.touchLookup) {
             var touchData = this.touchLookup[id];
 
-            var origin = this.osOrigin;
-            var initial = this.initialPos;
+            // Figure out change in origin.
+            var currentOsOrigin;
+            if (this.osOriginIsGlobal) {
+                currentOsOrigin = this.osOrigin;
+            } else {
+                currentOsOrigin = posTransform(this.pos, this.osOrigin);
+            }
 
+            // Figure out the change in POS from these key points.
             var deltaPos = giclee.datatypes.posFromPoints(
-                origin, touchData.initial,
-                origin, touchData.current,
+                this.initialOsOrigin, touchData.initial,
+                currentOsOrigin, touchData.current,
                 this.lockPosition, this.lockOrientation, this.lockScale
             );
             this.pos = giclee.datatypes.posConcat(deltaPos, this.initialPos);
