@@ -48,7 +48,8 @@
         c.moveTo(125, 50);
         c.arc(100, 50, 25, 0, 360, false);
         if (!c.isPointInPath(150, 50)) {
-            // Replace the method with a new wrapper.
+            // Replace the method with a new wrapper that transforms
+            // the context before doing the test.
             var proto = CanvasRenderingContext2D.prototype;
             var original = proto.isPointInPath;
             proto.isPointInPath = function(x, y) {
