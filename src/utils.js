@@ -95,7 +95,7 @@
      */
     var objectClearCache = function(target) {
         // Compile a list of keys to remove, so we don't try to
-        // iterate through keys while we delete them. This may be
+        // iterate through keys while we delete them, which may be
         // implementation dependent.
         var toRemove = [];
         for (var key in target) {
