@@ -1,5 +1,24 @@
 (function() {
     // ----------------------------------------------------------------------
+    // Console shim when it isn't defined.
+    // ----------------------------------------------------------------------
+
+    /**
+     * We use the console system for feedback (e.g. warnings when
+     * types aren't defined). If there is no console available (on
+     * firefox without firebug or in IE), then this crashes, so we
+     * create a no-op shim using the console methods we use.
+     */
+    if (window.console === undefined) {
+        window.console = {
+            dir: function() {},
+            log: function() {},
+            warn: function() {},
+            error: function() {}
+        };
+    };
+
+    // ----------------------------------------------------------------------
     // Object orientation
     // ----------------------------------------------------------------------
 

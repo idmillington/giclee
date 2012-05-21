@@ -206,7 +206,10 @@
         {}, Display._defaultOptions,
         {
             // Our options here.
-            initPosScale: 1.0
+            initPosScale: 1.0,
+            canRotateView: false,
+            canScaleView: true,
+            canPanView: true
         });
 
     /**
@@ -220,7 +223,11 @@
             var dm = DragManager.create();
             dm.setPos(that.pos);
             dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, true);
-            dm.setLocks(false, true, false);
+            dm.setLocks(
+                !that.options.canPanView,
+                !that.options.canRotateView,
+                !that.options.canScaleView
+            );
             dm.setRotateScaleOverride(event.shiftKey);
             dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
 
@@ -309,7 +316,11 @@
             var dm = DragManager.create();
             dm.setPos(viewBoundsPos);
             dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, false);
-            dm.setLocks(false, true, false);
+            dm.setLocks(
+                !that.display.options.canPanView,
+                !that.display.options.canRotateView,
+                !that.display.options.canScaleView
+            );
             dm.setRotateScaleOverride(event.shiftKey);
             dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
 

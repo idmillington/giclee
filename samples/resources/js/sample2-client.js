@@ -13,7 +13,9 @@
             {type:"foo", pos:{x:300, y:200, o:0.3, s:0.9}}
         ]);
 
-        viewer = giclee.viewer.Viewer.create($("#canvas"), document);
+        viewer = giclee.viewer.Viewer.create(
+            $("#canvas"), document
+        );
         overview = giclee.viewer.Overview.create(
             $("#overview"), viewer, {viewBoxColor:"#cc0000"}
         );
