@@ -45,10 +45,10 @@
     // --------------------------------------------------------------------
     var ModelFactory = ObjectBase.extend();
 
-    ModelFactory.init = function(DefaultModelClass, modelProperty) {
-        this.DefaultModelClass = DefaultModelClass || Model;
+    ModelFactory.init = function(modelProperty)
+    {
         this.modelProperty = modelProperty || "-model";
-        this.typeMapping = {"group":GroupModel};
+        this.typeMapping = {"group":GroupModel, "_default":Model};
     };
 
     /**
@@ -69,9 +69,7 @@
      * mappings as another, plus some extras.
      */
     ModelFactory.clone = function() {
-        var factory = ModelFactor.create(
-            this.DefaultModelClass, this.modelProperty
-        );
+        var factory = ModelFactor.create(this.modelProperty);
         objectConcat(factory.typeMapping, this.typeMapping);
         return factory;
     };
@@ -96,18 +94,22 @@
         if (element[this.modelProperty] === undefined) {
             var model = null;
 
-            var type = element.type;
-            if (type !== undefined) {
-                // See if we have a valid model class.
-                var ModelClass = this.typeMapping[element.type];
-                if (ModelClass === undefined) {
-                    console.warn("Type: '"+type+
-                                 "' has no Model class, using default.");
-                    ModelClass = this.DefaultModelClass;
-                }
+            if ($.isArray(element)) {
+                model = this.typeMapping.group.create(this, element, parent);
+            } else {
+                var type = element.type;
+                if (type !== undefined) {
+                    // See if we have a valid model class.
+                    var ModelClass = this.typeMapping[element.type];
+                    if (ModelClass === undefined) {
+                        console.warn("Type: '"+type+
+                                     "' has no Model class, using default.");
+                        ModelClass = this.typeMapping._default;
+                    }
 
-                // Create the model.
-                model = ModelClass.create(this, element, parent);
+                    // Create the model.
+                    model = ModelClass.create(this, element, parent);
+                }
             }
 
             // Store the created model, or null.
@@ -277,7 +279,7 @@
      */
     GroupModel._renderLocalCoords = function(c, posStack, globalBounds, options)
     {
-        var children = this.element.children;
+        var children = this._getChildren();
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
             var model = this.factory.ensureAndGetModel(child, this);
@@ -289,7 +291,7 @@
      * Returns the bounds for this object.
      */
     GroupModel.getBounds = function(posStack, options) {
-        var children = this.element.children;
+        var children = this._getChildren();
         if (children.length === 0) {
             return null;
         } else {
@@ -312,7 +314,7 @@
      * Checks if the given point is in one of this item's children.
      */
     GroupModel.isPointInObject = function(c, posStack, globalPoint) {
-        var children = this.element.children;
+        var children = this._getChildren();
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
             var model = this.factory.ensureAndGetModel(child, this);
@@ -325,6 +327,13 @@
         return false;
     };
 
+    /**
+     * Returns the children to recurse into.
+     */
+    GroupModel._getChildren = function() {
+        if ($.isArray(this.element)) return this.element;
+        else return this.element.children;
+    };
 
     // --------------------------------------------------------------------
     // API

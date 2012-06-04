@@ -385,7 +385,7 @@
         {}, Display._defaultOptions,
         {
             initPosScale: 0.15,
-            viewBoxColor: "black",
+            viewBoxColor: "#cc0000",
             viewBoxHighlight: "white",
             draggableBounds: true
         });
