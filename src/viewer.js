@@ -14,6 +14,7 @@
     var posSetTransform = giclee.datatypes.posSetTransform;
 
     var DragManager = giclee.managers.DragManager;
+    var ResizeManager = giclee.managers.ResizeManager;
 
     // ----------------------------------------------------------------------
     // Platform dependency shims
@@ -112,27 +113,58 @@
      * document into a visual representation. They should be derived
      * from the Renderer object.
      */
-    Display.init = function($canvas, document, options) {
-        this.events = giclee.managers.EventManager.create();
+    Display.init = function($div, document, options) {
+        var that = this;
 
+        // Parameters.
+        this.$div = $div;
+        this.document = document;
         this.options = giclee.utils.objectConcat(
             {}, this._defaultOptions, options
         );
 
-        this.$canvas = $canvas;
-        this.canvas = $canvas.get(0);
-        this.c = this.canvas.getContext("2d");
+        // Create an event manager.
+        this.events = giclee.managers.EventManager.create();
 
-        this.pos = posCreate();
-        this.document = document;
+        // Make sure the div is fixed, relative or absolute positioned.
+        var position = $div.css("position");
+        if (!position || position == 'static' || position == 'inherit') {
+            $div.css("position", "relative");
+        }
+
+        // Populate the div with a full size canvas. Eventually we may
+        // use many of these for render acceleration and
+        // caching.
+        this._$canvas = $("<canvas>").css({
+            position: "absolute",
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0
+        });
+        this.$div.html(this._$canvas);
+        this._c = this._$canvas.get(0).getContext("2d");
+
+        // Register to resize the canvas.
+        this._canvasResizeManager = ResizeManager.create(this._$canvas, $div);
+        this._canvasResizeManager.events.register(
+            "resize",
+            function() { that.draw(); }
+        );
+
+        // We start of uneditable.
         this.editMode = null;
 
+        // Set up event listening.
         this._initEvents();
 
+        // Set the initial view position.
+        this.pos = posCreate();
         if (this.options.initPos) {
             this.initPos(this.options.initPosScale);
         }
 
+        // Finally draw our contents.
         this.draw();
     };
 
@@ -171,7 +203,7 @@
      * We no longer want move events.
      */
     Display._unregisterMoveEvent = function() {
-        this.$canvas.unbind('mousemove', this._moveEventRegistered);
+        this.$div.unbind('mousemove', this._moveEventRegistered);
         this._moveEventRegistered = null;
     };
 
@@ -179,7 +211,7 @@
      * We no longer want touch events.
      */
     Display._unregisterTouchEvent = function() {
-        this.$canvas.unbind('mousedown', this._touchEventRegistered);
+        this.$div.unbind('mousedown', this._touchEventRegistered);
         this._touchEventRegistered = null;
     };
 
@@ -199,7 +231,7 @@
                 this._moveEventRegistered = function(event) {
                     that._handleMove(event);
                 };
-                this.$canvas.bind('mousemove', this._moveEventRegistered);
+                this.$div.bind('mousemove', this._moveEventRegistered);
             }
         } else {
             if (this._moveEventRegistered) {
@@ -213,7 +245,7 @@
                 this._touchEventRegistered = function(event) {
                     that._handleTouch(event);
                 };
-                this.$canvas.bind('mousedown', this._touchEventRegistered);
+                this.$div.bind('mousedown', this._touchEventRegistered);
             }
         } else {
             if (this._touchEventRegistered) {
@@ -245,7 +277,7 @@
         var aabb = AABB.createBounds.apply(AABB, bounds);
         var xywh = aabb.getXYWH();
 
-        var w = this.$canvas.width(), h = this.$canvas.height();
+        var w = this.$div.width(), h = this.$div.height();
         var scale = Math.min(scaleLimit, w/xywh[2], h/xywh[3]);
 
         var cx = (aabb.l + aabb.r)*0.5*scale;
@@ -260,8 +292,8 @@
      * Performs a complete redraw of the canvas.
      */
     Display.draw = function() {
-        var c = this.c;
-        var w = this.$canvas.width(), h = this.$canvas.height();
+        var c = this._c;
+        var w = this.$div.width(), h = this.$div.height();
         var aabb = AABB.create(0, 0, w, h);
 
         c.setTransform(1, 0, 0, 1, 0, 0);
@@ -274,7 +306,7 @@
     Display.redraw = function(aabb) {
         var ModelFactory = this.options.ModelFactory;
 
-        var c = this.c;
+        var c = this._c;
         c.clearRect.apply(c, aabb.getXYWH());
 
         var posStack = [this.pos];
@@ -296,7 +328,7 @@
         var ModelFactory = this.options.ModelFactory;
 
         var posStack = [this.pos];
-        var c = this.c;
+        var c = this._c;
 
         var result = [];
         var document = this.document;
@@ -313,7 +345,7 @@
 
 
     // --------------------------------------------------------------------
-    // The viewer is a display with a PanAndScaleEditMode preset.
+    // The viewer is a display with a ChangeViewEditMode preset.
     // --------------------------------------------------------------------
 
     var Viewer = Display.extend();
@@ -333,11 +365,11 @@
         });
 
     /**
-     * Creates a new viewer with a PanAndScale edit mode.
+     * Creates a new viewer with a ChangeView edit mode.
      */
     Viewer.init = function($canvas, document, options) {
         Display.init.call(this, $canvas, document, options);
-        this.setEditMode(giclee.edit.PanAndScaleEditMode.create());
+        this.setEditMode(giclee.edit.ChangeViewEditMode.create());
     };
 
     // --------------------------------------------------------------------
@@ -413,21 +445,21 @@
         Display.redraw.call(this, aabb);
 
         // Figure out the bounds of our linked display's window
-        var displayCanvas = this.display.$canvas;
-        var displayCanvasWidth = displayCanvas.width();
-        var displayCanvasHeight = displayCanvas.height();
+        var displayElement = this.display.$div;
+        var displayElementWidth = displayElement.width();
+        var displayElementHeight = displayElement.height();
         var pos = this.viewBoundsPosFromDisplayPos(this.display.pos);
 
         // Draw the render bounds
-        var c = this.c;
+        var c = this._c;
         c.save();
         giclee.datatypes.posSetTransform(pos, c);
         c.lineWidth = 3.0/pos.s;
         c.strokeStyle = this.options.viewBoxColor;
-        c.strokeRect(0, 0, displayCanvasWidth, displayCanvasHeight);
+        c.strokeRect(0, 0, displayElementWidth, displayElementHeight);
         c.lineWidth = 1.0/pos.s;
         c.strokeStyle = this.options.viewBoxHighlight;
-        c.strokeRect(0, 0, displayCanvasWidth, displayCanvasHeight);
+        c.strokeRect(0, 0, displayElementWidth, displayElementHeight);
         c.restore();
     };
 
@@ -444,8 +476,8 @@
      */
     var _OverviewEditMode = giclee.edit.EditModeBase.extend();
     _OverviewEditMode.handleTouch = function(overview, event) {
-        var w = overview.display.$canvas.width();
-        var h = overview.display.$canvas.height();
+        var w = overview.display.$div.width();
+        var h = overview.display.$div.height();
 
         var viewBoundsPos =
             overview.viewBoundsPosFromDisplayPos(overview.display.pos);
@@ -474,12 +506,12 @@
         var up = function(event) {
             dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
 
-            overview.$canvas.unbind('mousemove', move);
-            overview.$canvas.unbind('mouseup', up);
+            overview.$div.unbind('mousemove', move);
+            overview.$div.unbind('mouseup', up);
         };
 
-        overview.$canvas.bind('mousemove', move);
-        overview.$canvas.bind('mouseup', up);
+        overview.$div.bind('mousemove', move);
+        overview.$div.bind('mouseup', up);
     };
 
     // --------------------------------------------------------------------

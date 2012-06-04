@@ -22,7 +22,9 @@
 
     /**
      * Notification that the given display for which we're the edit
-     * mode, has received the given mouse movement event.
+     * mode, has received the given mouse movement event. Note that
+     * movement events will still be generated during a mouse drag, so
+     * they should probably be filtered somehow.
      */
     EditModeBase.handleMove = function(display, event) {
     };
@@ -38,13 +40,13 @@
     // An edit mode for panning and scaling the canvas.
     // --------------------------------------------------------------------
 
-    PanAndScaleEditMode = EditModeBase.extend();
+    ChangeViewEditMode = EditModeBase.extend();
 
     /**
      * Handles a touch by registering for updates on the associated canvas.
      */
-    PanAndScaleEditMode.handleTouch = function(display, event) {
-        var w = display.$canvas.width(), h = display.$canvas.height();
+    ChangeViewEditMode.handleTouch = function(display, event) {
+        var w = display.$div.width(), h = display.$div.height();
 
         var dm = DragManager.create();
         dm.setPos(display.pos);
@@ -70,12 +72,12 @@
         var up = function(event) {
             dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
 
-            display.$canvas.unbind('mousemove', move);
-            display.$canvas.unbind('mouseup', up);
+            display.$div.unbind('mousemove', move);
+            display.$div.unbind('mouseup', up);
         };
 
-        display.$canvas.bind('mousemove', move);
-        display.$canvas.bind('mouseup', up);
+        display.$div.bind('mousemove', move);
+        display.$div.bind('mouseup', up);
     };
 
     // --------------------------------------------------------------------
@@ -85,7 +87,7 @@
     if (window.giclee === undefined) window.giclee = {};
     window.giclee.edit = {
         EditModeBase: EditModeBase,
-        PanAndScaleEditMode: PanAndScaleEditMode
+        ChangeViewEditMode: ChangeViewEditMode
     };
 
 
