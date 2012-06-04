@@ -188,6 +188,18 @@
     };
 
     /**
+     * Inflate this AABB to include the given other AABB in the same
+     * coordinate space.
+     */
+    AABB.inflate = function(aabb) {
+        if (!aabb) return;
+        if (this.l > aabb.l) this.l = aabb.l;
+        if (this.t > aabb.t) this.t = aabb.t;
+        if (this.r < aabb.r) this.r = aabb.r;
+        if (this.b < aabb.b) this.b = aabb.b;
+    };
+
+    /**
      * Returns a new AABB which encloses this AABB, transformed by the
      * given pos.
      */

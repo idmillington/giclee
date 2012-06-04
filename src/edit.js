@@ -63,10 +63,7 @@
             dm.setRotateScaleOverride(event.shiftKey);
             dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
 
-            display.pos = posClone(dm.pos);
-            display.draw();
-
-            display.events.notify("view-changed", display.pos);
+            display.setPos(dm.pos);
         };
 
         var up = function(event) {

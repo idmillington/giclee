@@ -94,7 +94,10 @@
     };
 
     // --------------------------------------------------------------------
-    // The document contains the data to display.
+    // The document links the data to display with a command
+    // handler. The data is just an arbitrary javascript object, which
+    // is passed to a ModelFactory to create something that can be
+    // rendered.
     // --------------------------------------------------------------------
 
     var Document = ObjectBase.extend();
@@ -103,7 +106,7 @@
      * Creates a new document with the given raw content.
      */
     Document.init = function(content) {
-        if (content === undefined) content = [];
+        if (content === undefined) content = {};
         this.content = content;
     };
 

@@ -149,7 +149,10 @@
         this._canvasResizeManager = ResizeManager.create(this._$canvas, $div);
         this._canvasResizeManager.events.register(
             "resize",
-            function() { that.draw(); }
+            function(event) {
+                that.events.notify("resize", event);
+                that.draw();
+            }
         );
 
         // We start of uneditable.
@@ -262,19 +265,13 @@
     Display.initPos = function(scaleLimit) {
         var document = this.document;
         var content = document.content;
-        if (content.length === 0) return;
+        if (!content) return;
         if (scaleLimit === undefined) scaleLimit = 1000.0;
 
         var ModelFactory = this.options.ModelFactory;
         var posStack = [posCreate()];
-        var bounds = [];
-        for (var i = 0; i < content.length; i++) {
-            var element = content[i];
-            var model = ModelFactory.ensureAndGetModel(element, document);
-            bounds.push(model.getGlobalBounds(posStack));
-        }
-
-        var aabb = AABB.createBounds.apply(AABB, bounds);
+        var model = ModelFactory.ensureAndGetModel(content, document);
+        var aabb = model.getBounds(posStack);
         var xywh = aabb.getXYWH();
 
         var w = this.$div.width(), h = this.$div.height();
@@ -300,6 +297,15 @@
         this.redraw(aabb);
     };
 
+    Display.setPos = function(pos) {
+        this.pos.x = pos.x;
+        this.pos.y = pos.y;
+        this.pos.o = pos.o;
+        this.pos.s = pos.s;
+        this.events.notify('view-changed', this.pos);
+        this.draw();
+    };
+
     /**
      * Redraws the given part of the canvas.
      */
@@ -312,12 +318,8 @@
         var posStack = [this.pos];
 
         var document = this.document;
-        var content = document.content;
-        for (var i = 0; i < content.length; i++) {
-            var element = content[i];
-            var model = ModelFactory.ensureAndGetModel(element, document);
-            model.renderGlobalCoords(c, posStack, aabb);
-        }
+        var model = ModelFactory.ensureAndGetModel(document.content, document);
+        model.render(c, posStack, aabb, {});
     };
 
     /**
@@ -330,16 +332,15 @@
         var posStack = [this.pos];
         var c = this._c;
 
+        // TODO: Make this work. Its all or nothing here.
         var result = [];
         var document = this.document;
         var content = document.content;
-        for (var i = content.length-1; i >= 0; i--) {
-            var element = content[i];
-            var model = ModelFactory.ensureAndGetModel(element, document);
-            if (model.isGlobalPointInObject(c, posStack, xy)) {
-                result.push(model);
-            }
+        var model = ModelFactory.ensureAndGetModel(content, document);
+        if (model.isPointInObject(c, posStack, xy)) {
+            result.push(model);
         }
+
         return result;
     };
 
@@ -468,6 +469,7 @@
      */
     Overview._initEvents = function() {
         this.display.events.register("view-changed", this.draw, this);
+        this.display.events.register("resize", this.draw, this);
         Display._initEvents.call(this);
     };
 
@@ -497,10 +499,9 @@
             dm.setRotateScaleOverride(event.shiftKey);
             dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
 
-            overview.display.pos =
-                overview.displayPosFromViewBoundsPos(dm.pos);
-            overview.display.draw();
-            overview.display.events.notify("view-changed", overview.pos);
+            overview.display.setPos(
+                overview.displayPosFromViewBoundsPos(dm.pos)
+            );
         };
 
         var up = function(event) {

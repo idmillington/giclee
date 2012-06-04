@@ -48,7 +48,7 @@
     ModelFactory.init = function(DefaultModelClass, modelProperty) {
         this.DefaultModelClass = DefaultModelClass || Model;
         this.modelProperty = modelProperty || "-model";
-        this.typeMapping = {};
+        this.typeMapping = {"group":GroupModel};
     };
 
     /**
@@ -107,34 +107,13 @@
                 }
 
                 // Create the model.
-                model = ModelClass.create(element, parent);
-
-                // Recurse into the element.
-                this.ensureModelsInChildren(element);
+                model = ModelClass.create(this, element, parent);
             }
 
             // Store the created model, or null.
             element[this.modelProperty] = model;
         }
         return element[this.modelProperty];
-    };
-
-    /**
-     * Recursively ensures models in the children of the given
-     * element. Children are any property, either other objects or
-     * arrays.
-     */
-    ModelFactory.ensureModelsInChildren = function(element) {
-        for (var key in element) {
-            var value = element[key];
-            if ($.isPlainObject(value)) {
-                this.ensureAndGetModel(value, element);
-            } else if ($.isArray(value)) {
-                for (var i = 0; i < value.length; i++) {
-                    this.ensureAndGetModel(value[i], element);
-                }
-            }
-        }
     };
 
     // --------------------------------------------------------------------
@@ -145,18 +124,101 @@
 
     /**
      * Creates a model for the given element. Parent is used to pass
-     * events along.
+     * events along. The factory was the thing that created this
+     * model, which we can use to recursively create any child models.
      */
-    Model.init = function(element, parent) {
+    Model.init = function(factory, element, parent) {
+        this.factory = factory;
         this.element = element;
         this.parent = parent;
     };
 
     /**
-     * Updates the pos stack adding this element's global pos to the
-     * front of it. This can be undone with restoreStack.
+     * Renders this object to the given context. This is normally not
+     * overridden, since it provides top level support for things like
+     * in-bounds detection, and Position-Orientation-Scale. Instead,
+     * override the renderLocalCoords function. Note that, because
+     * this method sets the context's transform from the information
+     * on the posStack (rather than incrementally transforming the
+     * context's own transform matrix), it is safe to call this method
+     * from a _renderLocalCoords call (for nested elements, say).
      */
-    Model.updateStack = function(posStack) {
+    Model.render = function(c, posStack, globalBounds, options) {
+        var boundsInGlobal = this.getBounds(posStack, options);
+
+        // Draw bounds if needed.
+        if (options.drawBounds) {
+            this._drawBounds(c, boundsInGlobal);
+        }
+
+        // Draw the object itself.
+        var pos = this._updateStack(posStack);
+        if (boundsInGlobal.overlaps(globalBounds)) {
+            // Set the transform.
+            c.save();
+            posSetTransform(pos, c);
+
+            // Draw the object.
+            this._renderLocalCoords(c, posStack, globalBounds, options);
+
+            // Remove the transform.
+            c.restore();
+        }
+        this._resetStack(posStack);
+    };
+
+    /**
+     * Returns a bounding area in world coordinates for this object.
+     */
+    Model.getBounds = function(posStack, options) {
+        var pos = this._updateStack(posStack);
+        var localBounds = this._getLocalBounds(posStack, options);
+        var globalBounds = localBounds.getTransformed(pos);
+        this._resetStack(posStack);
+        return globalBounds;
+    };
+
+    /**
+     * Returns true if the given global point is inside this
+     * object. Objects can decide whether to be transparent to clicks,
+     * or can use click areas that are different from their rendering
+     * envelope. By default this method performs global to local
+     * transform on the given point, then calls
+     * isLocalPointInObject. In most cases, however, there are
+     * better ways to calculate the same thing.
+     */
+    Model.isPointInObject = function(c, posStack, globalPoint) {
+        var pos = this._updateStack(posStack);
+
+        // Calculate the local point.
+        var globalToLocal = posInvert(pos);
+        var localPoint = posTransform(globalToLocal, globalPoint);
+
+        // Calculate the result.
+        var result = this._isLocalPointInObject(c, posStack, localPoint);
+        this.retoreStack(posStack);
+        return result;
+    };
+
+    /**
+     * Helper method in debug mode to draw the given bounds in global
+     * coords (normally this object's bounds).
+     */
+    Model._drawBounds = function(c, bounds) {
+        c.save();
+        c.strokeStyle = "black";
+
+        c.setTransform(1, 0, 0, 1, 0, 0);
+        var xywh = bounds.getXYWH();
+        c.strokeRect(xywh[0], xywh[1], xywh[2], xywh[3]);
+        c.restore();
+    };
+
+    /**
+     * Updates the pos stack adding this element's global pos to the
+     * front of it. This can be undone with _resetStack.
+     */
+    Model._updateStack = function(posStack) {
         var pos;
         if (this.element.pos !== undefined) {
             pos = posConcat(posStack[0], this.element.pos);
@@ -170,100 +232,99 @@
     /**
      * Removes the head of the given pos stack.
      */
-    Model.resetStack = function(posStack) {
+    Model._resetStack = function(posStack) {
         posStack.shift();
     };
 
     /**
-     * Renders this object to the given context. This is normally not
-     * overridden, since it provides top level support for things like
-     * in-bounds detection, Position-Orientation-Scale and
-     * filters. Instead, override the renderLocalCoords function.
-     */
-    Model.renderGlobalCoords = function(c, posStack, globalBounds, options) {
-        var pos = this.updateStack(posStack);
-
-        // Get our bounds in global coords and check if we need drawing.
-        var boundsInLocal = this.getLocalBounds(posStack, options);
-        var boundsInGlobal = boundsInLocal.getTransformed(pos);
-        if (boundsInGlobal.overlaps(globalBounds)) {
-
-            // Set the transform.
-            c.save();
-            posSetTransform(pos, c);
-
-            // Draw the object.
-            this.renderLocalCoords(c, posStack, globalBounds);
-
-            // Remove the transform.
-            c.restore();
-
-            // TODO: Handle filters.
-        }
-        this.resetStack(posStack);
-    };
-
-    /**
      * Override this function to do the actual rendering for this
-     * object.
+     * object. This must only be called from render().
      */
-    Model.renderLocalCoords = function(c, posStack, globalBounds, options) {
+    Model._renderLocalCoords = function(c, posStack, globalBounds, options) {
         // The base implemenation draws a black placeholder-rectangle.
         c.fillStyle = "black";
         c.fillRect(-50, -50, 100, 100);
     };
 
     /**
-     * Returns a bounding area in world coordinates for this object.
-     */
-    Model.getGlobalBounds = function(posStack, options) {
-        var pos = this.updateStack(posStack);
-        var localBounds = this.getLocalBounds(posStack, options);
-        var globalBounds = localBounds.getTransformed(pos);
-        this.resetStack(posStack);
-        return globalBounds;
-    };
-
-    /**
      * Override this function to return a local-space bounding object
-     * for this element.
+     * for this element. This must only be called from getBounds().
      */
-    Model.getLocalBounds = function(posStack, options) {
+    Model._getLocalBounds = function(posStack, options) {
         // The base implementation's rectangle.
         return AABB.create(-50, -50, 50, 50);
     };
 
     /**
-     * Returns true if the given global point is inside this
-     * object. Objects can decide whether to be transparent to clicks,
-     * or can use click areas that are different from their rendering
-     * envelope. By default this method performs global to local
-     * transform on the given point, then calls
-     * isLocalPointInObject. In most cases, however, there are
-     * better ways to calculate the same thing.
-     */
-    Model.isGlobalPointInObject = function(c, posStack, globalPoint) {
-        var pos = this.updateStack(posStack);
-
-        // Calculate the local point.
-        var globalToLocal = posInvert(pos);
-        var localPoint = posTransform(globalToLocal, globalPoint);
-
-        // Calculate the result.
-        var result = this.isLocalPointInObject(c, posStack, localPoint);
-        this.retoreStack(posStack);
-        return result;
-    };
-
-    /**
      * Should return true if the given point (in object coordinates)
      * is in this object. This should be overridden, unless the global
-     * version is overridden.
+     * version is overridden. This must only be called from
+     * isPointInObject().
      */
-    Model.isLocalPointInObject = function(c, posStack, localPoint) {
+    Model._isLocalPointInObject = function(c, posStack, localPoint) {
         var x = localPoint.x, y = localPoint.y;
         return x > -50 && x < 50 && y > -50 && y < 50;
     };
+
+    // --------------------------------------------------------------------
+    // A group model manages a group of children.
+    // --------------------------------------------------------------------
+
+    var GroupModel = Model.extend();
+
+    /**
+     * Renders the child objects.
+     */
+    GroupModel._renderLocalCoords = function(c, posStack, globalBounds, options)
+    {
+        var children = this.element.children;
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            var model = this.factory.ensureAndGetModel(child, this);
+            model.render(c, posStack, globalBounds, options);
+        }
+    };
+
+    /**
+     * Returns the bounds for this object.
+     */
+    GroupModel.getBounds = function(posStack, options) {
+        var children = this.element.children;
+        if (children.length === 0) {
+            return null;
+        } else {
+            var pos = this._updateStack(posStack);
+            var model = this.factory.ensureAndGetModel(children[0], this);
+            var aabb = model.getBounds(posStack, options);
+
+            for (var i = 1; i < children.length; i++) {
+                var child = children[i];
+                model = this.factory.ensureAndGetModel(child, this);
+                aabb.inflate(model.getBounds(posStack, options));
+            }
+
+            this._resetStack(posStack);
+            return aabb;
+        }
+    };
+
+    /**
+     * Checks if the given point is in one of this item's children.
+     */
+    GroupModel.isPointInObject = function(c, posStack, globalPoint) {
+        var children = this.element.children;
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            var model = this.factory.ensureAndGetModel(child, this);
+            if (model.isPointInObject(posStack, globalPoint)) {
+                this._resetStack(posStack);
+                return true;
+            }
+        }
+        this._resetStack(posStack);
+        return false;
+    };
+
 
     // --------------------------------------------------------------------
     // API
