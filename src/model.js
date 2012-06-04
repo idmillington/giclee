@@ -203,6 +203,16 @@
     };
 
     /**
+     * For recursive elements, this should return the children. This
+     * may be used by viewers to create more complex rendering and
+     * caching strategies. If this element has no children, either a
+     * falsy value or the empty list can be returned.
+     */
+    Model.getChildren = function() {
+        return null;
+    };
+
+    /**
      * Helper method in debug mode to draw the given bounds in global
      * coords (normally this object's bounds).
      */
@@ -275,23 +285,18 @@
     var GroupModel = Model.extend();
 
     /**
-     * Renders the child objects.
+     * Returns the children to recurse into.
      */
-    GroupModel._renderLocalCoords = function(c, posStack, globalBounds, options)
-    {
-        var children = this._getChildren();
-        for (var i = 0; i < children.length; i++) {
-            var child = children[i];
-            var model = this.factory.ensureAndGetModel(child, this);
-            model.render(c, posStack, globalBounds, options);
-        }
+    GroupModel.getChildren = function() {
+        if ($.isArray(this.element)) return this.element;
+        else return this.element.children;
     };
 
     /**
      * Returns the bounds for this object.
      */
     GroupModel.getBounds = function(posStack, options) {
-        var children = this._getChildren();
+        var children = this.getChildren();
         if (children.length === 0) {
             return null;
         } else {
@@ -314,7 +319,7 @@
      * Checks if the given point is in one of this item's children.
      */
     GroupModel.isPointInObject = function(c, posStack, globalPoint) {
-        var children = this._getChildren();
+        var children = this.getChildren();
         for (var i = 0; i < children.length; i++) {
             var child = children[i];
             var model = this.factory.ensureAndGetModel(child, this);
@@ -328,11 +333,16 @@
     };
 
     /**
-     * Returns the children to recurse into.
+     * Renders the child objects.
      */
-    GroupModel._getChildren = function() {
-        if ($.isArray(this.element)) return this.element;
-        else return this.element.children;
+    GroupModel._renderLocalCoords = function(c, posStack, globalBounds, options)
+    {
+        var children = this.getChildren();
+        for (var i = 0; i < children.length; i++) {
+            var child = children[i];
+            var model = this.factory.ensureAndGetModel(child, this);
+            model.render(c, posStack, globalBounds, options);
+        }
     };
 
     // --------------------------------------------------------------------
