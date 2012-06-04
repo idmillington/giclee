@@ -125,15 +125,101 @@
 
         this.pos = posCreate();
         this.document = document;
+        this.editMode = null;
 
         this._initEvents();
-        this._initClearup();
 
         if (this.options.initPos) {
             this.initPos(this.options.initPosScale);
         }
 
         this.draw();
+    };
+
+    /**
+     * This base object has no events to register, but this is
+     * overloaded in subobjects.
+     */
+    Display._initEvents = function() {
+        this._moveEventRegistered = null;
+        this._touchEventRegistered = null;
+    };
+
+    /**
+     * Called when the display receives a mouse move event.
+     */
+    Display._handleMove = function(event) {
+        if (this.editMode && this.editMode.getRequiresMove()) {
+            this.editMode.handleMove(this, event);
+        } else {
+            this._unregisterMoveEvent();
+        }
+    };
+
+    /**
+     * Called when the display receives a touch event.
+     */
+    Display._handleTouch = function(event) {
+        if (this.editMode) {
+            this.editMode.handleTouch(this, event);
+        } else {
+            this._unregisterTouchEvent();
+        }
+    };
+
+    /**
+     * We no longer want move events.
+     */
+    Display._unregisterMoveEvent = function() {
+        this.$canvas.unbind('mousemove', this._moveEventRegistered);
+        this._moveEventRegistered = null;
+    };
+
+    /**
+     * We no longer want touch events.
+     */
+    Display._unregisterTouchEvent = function() {
+        this.$canvas.unbind('mousedown', this._touchEventRegistered);
+        this._touchEventRegistered = null;
+    };
+
+    /**
+     * Sets the current edit mode for this display. Can be called with
+     * null as an argument to clear the edit mode.
+     */
+    Display.setEditMode = function(editMode) {
+        if (editMode == this.editMode) return;
+
+        var that = this;
+        this.editMode = editMode;
+
+        // Check if the edit mode requires move.
+        if (this.editMode && this.editMode.getRequiresMove()) {
+            if (!this._moveEventRegistered) {
+                this._moveEventRegistered = function(event) {
+                    that._handleMove(event);
+                };
+                this.$canvas.bind('mousemove', this._moveEventRegistered);
+            }
+        } else {
+            if (this._moveEventRegistered) {
+                this._unregisterMoveEvent();
+            }
+        }
+
+        // Register touches, if they aren't already
+        if (this.editMode) {
+            if (!this._touchEventRegistered) {
+                this._touchEventRegistered = function(event) {
+                    that._handleTouch(event);
+                };
+                this.$canvas.bind('mousedown', this._touchEventRegistered);
+            }
+        } else {
+            if (this._touchEventRegistered) {
+                this._unregisterTouchEvent();
+            }
+        }
     };
 
     /**
@@ -171,19 +257,6 @@
     };
 
     /**
-     * This base object has no events to register, but this is
-     * overloaded in subobjects.
-     */
-    Display._initEvents = function() {
-    };
-
-    /**
-     * This base object has no other init to do, but subobjects might.
-     */
-    Display._initClearup = function() {
-    };
-
-    /**
      * Performs a complete redraw of the canvas.
      */
     Display.draw = function() {
@@ -215,10 +288,32 @@
         }
     };
 
+    /**
+     * Returns the models of objects at the given global coordinates,
+     * in order from top to bottom.
+     */
+    Display.getModelsAt = function(xy) {
+        var ModelFactory = this.options.ModelFactory;
+
+        var posStack = [this.pos];
+        var c = this.c;
+
+        var result = [];
+        var document = this.document;
+        var content = document.content;
+        for (var i = content.length-1; i >= 0; i--) {
+            var element = content[i];
+            var model = ModelFactory.ensureAndGetModel(element, document);
+            if (model.isGlobalPointInObject(c, posStack, xy)) {
+                result.push(model);
+            }
+        }
+        return result;
+    };
+
+
     // --------------------------------------------------------------------
-    // The viewer displays a document on a canvas. A viewer can be used
-    // to move around and zoom into some content, but cannot be used to
-    // edit the content.
+    // The viewer is a display with a PanAndScaleEditMode preset.
     // --------------------------------------------------------------------
 
     var Viewer = Display.extend();
@@ -238,73 +333,17 @@
         });
 
     /**
-     * Initializes events.
+     * Creates a new viewer with a PanAndScale edit mode.
      */
-    Viewer._initEvents = function() {
-        var that = this;
-        this.$canvas.mousedown(function(event) {
-            var w = that.$canvas.width(), h = that.$canvas.height();
-
-            var dm = DragManager.create();
-            dm.setPos(that.pos);
-            dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, true);
-            dm.setLocks(
-                !that.options.canPanView,
-                !that.options.canRotateView,
-                !that.options.canScaleView
-            );
-            dm.setRotateScaleOverride(event.shiftKey);
-            dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
-
-            var move = function(event) {
-                dm.setRotateScaleOverride(event.shiftKey);
-                dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
-
-                that.pos = posClone(dm.pos);
-                that.draw();
-
-                that.events.notify("view-changed", that.pos);
-            };
-
-            var up = function(event) {
-                dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
-
-                that.$canvas.unbind('mousemove', move);
-                that.$canvas.unbind('mouseup', up);
-            };
-
-            that.$canvas.bind('mousemove', move);
-            that.$canvas.bind('mouseup', up);
-        });
-    };
-
-
-    /**
-     * Returns the models of objects at the given global
-     * coordinates.
-     */
-    Viewer.getModelsAt = function(xy) {
-        var ModelFactory = this.options.ModelFactory;
-
-        var posStack = [this.pos];
-        var c = this.c;
-
-        var result = [];
-        var document = this.document;
-        var content = document.content;
-        for (var i = 0; i < content.length; i++) {
-            var element = content[i];
-            var model = ModelFactory.ensureAndGetModel(element, document);
-            if (model.isGlobalPointInObject(c, posStack, xy)) {
-                result.push(model);
-            }
-        }
-        return result;
+    Viewer.init = function($canvas, document, options) {
+        Display.init.call(this, $canvas, document, options);
+        this.setEditMode(giclee.edit.PanAndScaleEditMode.create());
     };
 
     // --------------------------------------------------------------------
     // An overview is a type of display that shows the view bounds of
-    // another display component.
+    // another display component. Can be set to have a custom edit
+    // mode that allows the bounds to be dragged.
     // --------------------------------------------------------------------
 
     var Overview = Display.extend();
@@ -314,68 +353,23 @@
         {
             initPosScale: 0.15,
             viewBoxColor: "black",
-            viewBoxHighlight: "white"
+            viewBoxHighlight: "white",
+            draggableBounds: true
         });
 
-    Overview.init = function($canvas, display, renderers, options) {
+    Overview.init = function($canvas, display, options) {
         this.display = display;
-        Display.init.call(this, $canvas, display.document, renderers, options);
-    };
-
-    Overview._initClearup = function() {
-    };
-
-    Overview._initEvents = function() {
-        this.display.events.register("view-changed", this.draw, this);
-
-        // Handle dragging (interpreted as a drag of the linked view's
-        // bounding area).
-        var that = this;
-        this.$canvas.mousedown(function(event) {
-            var w = that.display.$canvas.width();
-            var h = that.display.$canvas.height();
-
-            var viewBoundsPos =
-                that._viewBoundsPosFromDisplayPos(that.display.pos);
-
-            var dm = DragManager.create();
-            dm.setPos(viewBoundsPos);
-            dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, false);
-            dm.setLocks(
-                !that.display.options.canPanView,
-                !that.display.options.canRotateView,
-                !that.display.options.canScaleView
-            );
-            dm.setRotateScaleOverride(event.shiftKey);
-            dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
-
-            var move = function(event) {
-                dm.setRotateScaleOverride(event.shiftKey);
-                dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
-
-                that.display.pos =
-                    that._displayPosFromViewBoundsPos(dm.pos);
-                that.display.draw();
-                that.display.events.notify("view-changed", that.pos);
-            };
-
-            var up = function(event) {
-                dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
-
-                that.$canvas.unbind('mousemove', move);
-                that.$canvas.unbind('mouseup', up);
-            };
-
-            that.$canvas.bind('mousemove', move);
-            that.$canvas.bind('mouseup', up);
-        });
+        Display.init.call(this, $canvas, display.document, options);
+        if (this.options.draggableBounds) {
+            this.setEditMode(_OverviewEditMode.create());
+        }
     };
 
     /**
      * Given the Pos of the linked display, figures out the pos of the
      * view bounding rectangle that needs to be drawn.
      */
-    Overview._viewBoundsPosFromDisplayPos = function(displayPos) {
+    Overview.viewBoundsPosFromDisplayPos = function(displayPos) {
         var relativeScale = this.pos.s / displayPos.s;
         var x = -displayPos.x * relativeScale;
         var y = -displayPos.y * relativeScale;
@@ -396,7 +390,7 @@
      * update the linked display when moving or scaling the view
      * bounding rectangle.
      */
-    Overview._displayPosFromViewBoundsPos = function(viewBoundsPos) {
+    Overview.displayPosFromViewBoundsPos = function(viewBoundsPos) {
         var oos = 1.0 / viewBoundsPos.s;
         var relativeScale = this.pos.s * oos;
         var x = (this.pos.x - viewBoundsPos.x) * oos;
@@ -422,7 +416,7 @@
         var displayCanvas = this.display.$canvas;
         var displayCanvasWidth = displayCanvas.width();
         var displayCanvasHeight = displayCanvas.height();
-        var pos = this._viewBoundsPosFromDisplayPos(this.display.pos);
+        var pos = this.viewBoundsPosFromDisplayPos(this.display.pos);
 
         // Draw the render bounds
         var c = this.c;
@@ -435,6 +429,57 @@
         c.strokeStyle = this.options.viewBoxHighlight;
         c.strokeRect(0, 0, displayCanvasWidth, displayCanvasHeight);
         c.restore();
+    };
+
+    /**
+     * Registers additionally to be told when its associated display changes.
+     */
+    Overview._initEvents = function() {
+        this.display.events.register("view-changed", this.draw, this);
+        Display._initEvents.call(this);
+    };
+
+    /**
+     * An internal edit mode used for dragging the bounds around.
+     */
+    var _OverviewEditMode = giclee.edit.EditModeBase.extend();
+    _OverviewEditMode.handleTouch = function(overview, event) {
+        var w = overview.display.$canvas.width();
+        var h = overview.display.$canvas.height();
+
+        var viewBoundsPos =
+            overview.viewBoundsPosFromDisplayPos(overview.display.pos);
+
+        var dm = DragManager.create();
+        dm.setPos(viewBoundsPos);
+        dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, false);
+        dm.setLocks(
+            !overview.display.options.canPanView,
+            !overview.display.options.canRotateView,
+            !overview.display.options.canScaleView
+        );
+        dm.setRotateScaleOverride(event.shiftKey);
+        dm.startTouch(1, {x:event.offsetX, y:event.offsetY});
+
+        var move = function(event) {
+            dm.setRotateScaleOverride(event.shiftKey);
+            dm.moveTouch(1, {x:event.offsetX, y:event.offsetY});
+
+            overview.display.pos =
+                overview.displayPosFromViewBoundsPos(dm.pos);
+            overview.display.draw();
+            overview.display.events.notify("view-changed", overview.pos);
+        };
+
+        var up = function(event) {
+            dm.endTouch(1, {x:event.offsetX, y:event.offsetY});
+
+            overview.$canvas.unbind('mousemove', move);
+            overview.$canvas.unbind('mouseup', up);
+        };
+
+        overview.$canvas.bind('mousemove', move);
+        overview.$canvas.bind('mouseup', up);
     };
 
     // --------------------------------------------------------------------

@@ -251,8 +251,6 @@
         objectClearCache: objectClearCache,
         deepCopy: deepCopy,
 
-        augmentFunction: augmentFunction,
-
         uuid4: uuid4,
         utf8encode: utf8encode,
         crc32: crc32
