@@ -233,6 +233,7 @@
             if (!this._moveEventRegistered) {
                 this._moveEventRegistered = function(event) {
                     that._handleMove(event);
+                    return false;
                 };
                 this.$div.bind('mousemove', this._moveEventRegistered);
             }
@@ -247,6 +248,7 @@
             if (!this._touchEventRegistered) {
                 this._touchEventRegistered = function(event) {
                     that._handleTouch(event);
+                    return false;
                 };
                 this.$div.bind('mousedown', this._touchEventRegistered);
             }
@@ -297,6 +299,9 @@
         this.redraw(aabb);
     };
 
+    /**
+     * Sets the view pos of the display.
+     */
     Display.setPos = function(pos) {
         this.pos.x = pos.x;
         this.pos.y = pos.y;

@@ -309,7 +309,7 @@
      */
     ResizeNotifier._initPollingResize = function() {
         var that = this;
-        setInterval(function() { that._checkResize(); }, 250);
+        setInterval(function() { that._checkResize(); }, 150);
     };
 
 
