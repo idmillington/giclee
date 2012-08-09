@@ -87,6 +87,13 @@
         };
     })();
 
+    /**
+     * Make sure that mousewheel events have position data.
+     */
+    (function() {
+        $.event.fixHooks.mousewheel = $.event.mouseHooks;
+    })();
+
     // --------------------------------------------------------------------
     // A display displays a document on a canvas. It is the base of other
     // display elements (notably the viewer), but does not allow any
@@ -155,7 +162,7 @@
             }
         );
 
-        // We start of uneditable.
+        // We start off uneditable.
         this.editMode = null;
 
         // Set up event listening.
@@ -178,6 +185,7 @@
     Display._initEvents = function() {
         this._moveEventRegistered = null;
         this._touchEventRegistered = null;
+        this._wheelEventRegistered = null;
     };
 
     /**
@@ -188,6 +196,35 @@
             this.editMode.handleMove(this, event);
         } else {
             this._unregisterMoveEvent();
+        }
+    };
+
+    /**
+     * Called when the display receives a wheel event.
+     */
+    Display._handleWheel = function(event) {
+        if (this.editMode) {
+            // Change the event to be a little more platform independent.
+
+            // Skip if we have a 2d-scroll and this is the wrong direction.
+            if (event.axis !== undefined &&
+                event.axis === event.HORIZONTAL_AXIS) return;
+
+            // Figure out the scroll.
+            var orig = event.originalEvent || window.event;
+            var delta = 0;
+            if (orig.wheelDeltaY) delta = orig.wheelDeltaY / 120.0;
+            else {
+                if (orig.wheelDelta) delta = orig.wheelDelta / 120.0;
+                else {
+                    if (orig.detail) delta = -orig.detail / 3.0;
+                }
+            }
+            if (delta === 0) return;
+            event.delta = delta;
+            this.editMode.handleMouseWheel(this, event);
+        } else {
+            this._unregisterWheelEvent();
         }
     };
 
@@ -219,6 +256,14 @@
     };
 
     /**
+     * We no longer want wheel events.
+     */
+    Display._unregisterWheelEvent = function() {
+        this.$div.unbind('mousewheel', this._wheelEventRegistered);
+        this._wheelEventRegistered = null;
+    };
+
+    /**
      * Sets the current edit mode for this display. Can be called with
      * null as an argument to clear the edit mode.
      */
@@ -247,6 +292,8 @@
         if (this.editMode) {
             if (!this._touchEventRegistered) {
                 this._touchEventRegistered = function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
                     that._handleTouch(event);
                     return false;
                 };
@@ -255,6 +302,23 @@
         } else {
             if (this._touchEventRegistered) {
                 this._unregisterTouchEvent();
+            }
+        }
+
+        // And mouse wheel events.
+        if (this.editMode) {
+            if (!this._wheelEventRegistered) {
+                this._wheelEventRegistered = function(event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    that._handleWheel(event);
+                    return false;
+                };
+                this.$div.bind('mousewheel', this._wheelEventRegistered);
+            }
+        } else {
+            if (this._wheelEventRegistered) {
+                this._unregisterWheelEvent();
             }
         }
     };
@@ -518,6 +582,18 @@
 
         overview.$div.bind('mousemove', move);
         overview.$div.bind('mouseup', up);
+    };
+    _OverviewEditMode.handleMouseWheel = function(overview, event) {
+        var display = overview.display;
+        if (!event.delta || !display.options.canScaleView) return;
+
+        var newScale = Math.pow(1.4, -event.delta);
+        var deltaPos = giclee.datatypes.posFromOriginOrientationScale(
+            {x:display.$div.width()*0.5, y:display.$div.height()*0.5},
+            0.0, newScale
+        );
+        var pos = giclee.datatypes.posConcat(deltaPos, display.pos);
+        display.setPos(pos);
     };
 
     // --------------------------------------------------------------------

@@ -105,6 +105,22 @@
     };
 
     /**
+     * Creates a pos which represents a transform about the given origin
+     * with the given orientation and scale.
+     */
+    var posFromOriginOrientationScale = function(origin, orientation, scale) {
+        var pos = {x:0, y:0, o:orientation, s:scale};
+
+        // Correct for the origin
+        var cos = pos.s*Math.cos(pos.o);
+        var sin = pos.s*Math.sin(pos.o);
+        pos.x = origin.x - (cos*origin.x - sin*origin.y);
+        pos.y = origin.y - (sin*origin.x + cos*origin.y);
+
+        return pos;
+    };
+
+    /**
      * Creates a pos which represents a transform where the given two
      * points are moved between their original and current locations,
      * so posTransform(pos, original1) = current1, and
@@ -278,6 +294,7 @@
         posConcat: posConcat,
         posInvert: posInvert,
         posTransform: posTransform,
+        posFromOriginOrientationScale: posFromOriginOrientationScale,
         posSetTransform: posSetTransform,
         posFromPoints: posFromPoints,
         posNormalize: posNormalize,

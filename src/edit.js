@@ -36,6 +36,14 @@
     EditModeBase.handleTouch = function(display, event) {
     };
 
+    /**
+     * Notification that the given display for which we're the edit
+     * mode has received a mouse wheel event, which should adjust the
+     * display by the given amount.
+     */
+    EditModeBase.handleMouseWheel = function(display, event, delta) {
+    };
+
     // --------------------------------------------------------------------
     // An edit mode for panning and scaling the canvas.
     // --------------------------------------------------------------------
@@ -75,6 +83,33 @@
 
         display.$div.bind('mousemove', move);
         display.$div.bind('mouseup', up);
+    };
+
+    /**
+     * Handles scrolling the mouse by zooming.
+     */
+    ChangeViewEditMode.handleMouseWheel = function(display, event) {
+        if (!event.delta || !display.options.canScaleView) return;
+
+        var newScale = Math.pow(1.4, event.delta);
+        // TODO: Limit the scale?
+
+        // Figure out where the mouse is.
+        var x,y;
+        if (event.offsetX !== undefined && event.offsetY !== undefined) {
+            x = event.offsetX;
+            y = event.offsetY;
+        } else {
+            x = display.$div.width()*0.5;
+            y = display.$div.height()*0.5;
+        }
+
+        // Create a transform based on the given center points.
+        var deltaPos = giclee.datatypes.posFromOriginOrientationScale(
+            {x:x, y:y}, 0.0, newScale
+        );
+        var pos = giclee.datatypes.posConcat(deltaPos, display.pos);
+        display.setPos(pos);
     };
 
     // --------------------------------------------------------------------
