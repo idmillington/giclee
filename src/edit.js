@@ -24,24 +24,36 @@
      * Notification that the given display for which we're the edit
      * mode, has received the given mouse movement event. Note that
      * movement events will still be generated during a mouse drag, so
-     * they should probably be filtered somehow.
+     * you may need to filter them in that case.
+     *
+     * Returns true if this edit mode handled the event, to allow for
+     * delegation.
      */
     EditModeBase.handleMove = function(display, event) {
+        return false;
     };
 
     /**
      * Notification that the given display for which we're the edit
      * mode, has received the given touch event.
+     *
+     * Returns true if this edit mode handled the event, to allow for
+     * delegation.
      */
     EditModeBase.handleTouch = function(display, event) {
+        return false;
     };
 
     /**
      * Notification that the given display for which we're the edit
      * mode has received a mouse wheel event, which should adjust the
      * display by the given amount.
+     *
+     * Returns true if this edit mode handled the event, to allow for
+     * delegation.
      */
     EditModeBase.handleMouseWheel = function(display, event, delta) {
+        return false;
     };
 
     // --------------------------------------------------------------------
@@ -83,6 +95,8 @@
 
         display.$div.bind('mousemove', move);
         display.$div.bind('mouseup', up);
+
+        return true;
     };
 
     /**
@@ -104,13 +118,61 @@
             y = display.$div.height()*0.5;
         }
 
-        // Create a transform based on the given center points.
-        var deltaPos = giclee.datatypes.posFromOriginOrientationScale(
+        // Create a transform based on the center and scale.
+        var deltaPos = giclee.datatypes.posWithOrigin(
             {x:x, y:y}, 0.0, newScale
         );
         var pos = giclee.datatypes.posConcat(deltaPos, display.pos);
         display.setPos(pos);
+
+        return true;
     };
+
+    // --------------------------------------------------------------------
+    // Delegates to a priority ordered list of edit modes.
+    // --------------------------------------------------------------------
+
+    DelegateEditMode = EditModeBase.extend();
+
+    /**
+     * Pass a list of delegates to the constructor.
+     */
+    DelegateEditMode.init = function(delegates) {
+        this.delegates = delegates;
+    };
+
+    var _delegate = function(fnName) {
+        return function() {
+            for (var i = 0; i < this.delegates.length; i++) {
+                var delegate = this.delegates[i];
+                if (delegate[fnName].apply(delegate, arguments)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+    };
+
+    /**
+     * We require a move if we have any delegates that do.
+     */
+    DelegateEditMode.getRequiresMove = _delegate('getRequiresMove');
+
+    /**
+     * Handles non-drag movement.
+     */
+    DelegateEditMode.handleMove = _delegate('handleMouseWheel');
+
+    /**
+     * Handles a touch by registering for updates on the associated
+     * canvas.
+     */
+    DelegateEditMode.handleTouch = _delegate('handleTouch');
+
+    /**
+     * Handles scrolling the mouse by zooming.
+     */
+    DelegateEditMode.handleMouseWheel = _delegate('handleMouseWheel');
 
     // --------------------------------------------------------------------
     // API
@@ -119,7 +181,8 @@
     if (window.giclee === undefined) window.giclee = {};
     window.giclee.edit = {
         EditModeBase: EditModeBase,
-        ChangeViewEditMode: ChangeViewEditMode
+        ChangeViewEditMode: ChangeViewEditMode,
+        DelegateEditMode: DelegateEditMode
     };
 
 

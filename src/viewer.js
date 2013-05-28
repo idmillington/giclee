@@ -437,8 +437,8 @@
     /**
      * Creates a new viewer with a ChangeView edit mode.
      */
-    Viewer.init = function($canvas, document, options) {
-        Display.init.call(this, $canvas, document, options);
+    Viewer.init = function($div, document, options) {
+        Display.init.call(this, $div, document, options);
         this.setEditMode(giclee.edit.ChangeViewEditMode.create());
     };
 
@@ -459,9 +459,9 @@
             draggableBounds: true
         });
 
-    Overview.init = function($canvas, display, options) {
+    Overview.init = function($div, display, options) {
         this.display = display;
-        Display.init.call(this, $canvas, display.document, options);
+        Display.init.call(this, $div, display.document, options);
         if (this.options.draggableBounds) {
             this.setEditMode(_OverviewEditMode.create());
         }
@@ -582,18 +582,22 @@
 
         overview.$div.bind('mousemove', move);
         overview.$div.bind('mouseup', up);
+
+        return true;
     };
     _OverviewEditMode.handleMouseWheel = function(overview, event) {
         var display = overview.display;
         if (!event.delta || !display.options.canScaleView) return;
 
         var newScale = Math.pow(1.4, -event.delta);
-        var deltaPos = giclee.datatypes.posFromOriginOrientationScale(
+        var deltaPos = giclee.datatypes.posWithOrigin(
             {x:display.$div.width()*0.5, y:display.$div.height()*0.5},
             0.0, newScale
         );
         var pos = giclee.datatypes.posConcat(deltaPos, display.pos);
         display.setPos(pos);
+
+        return true;
     };
 
     // --------------------------------------------------------------------

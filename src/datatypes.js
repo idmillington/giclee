@@ -108,7 +108,7 @@
      * Creates a pos which represents a transform about the given origin
      * with the given orientation and scale.
      */
-    var posFromOriginOrientationScale = function(origin, orientation, scale) {
+    var posWithOrigin = function(origin, orientation, scale) {
         var pos = {x:0, y:0, o:orientation, s:scale};
 
         // Correct for the origin
@@ -294,7 +294,7 @@
         posConcat: posConcat,
         posInvert: posInvert,
         posTransform: posTransform,
-        posFromOriginOrientationScale: posFromOriginOrientationScale,
+        posWithOrigin: posWithOrigin,
         posSetTransform: posSetTransform,
         posFromPoints: posFromPoints,
         posNormalize: posNormalize,
