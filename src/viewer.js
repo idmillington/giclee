@@ -1,10 +1,10 @@
-/* 
- * 
+/*
+ * Displays the elements in a HTML Canvas.
  */
 /*jshint indent:2 */
 (function($) {
-  "use strict";
-  
+  'use strict';
+
   // Import
   var ObjectBase = giclee.utils.ObjectBase;
 
@@ -21,8 +21,6 @@
 
   var DragManager = giclee.managers.DragManager;
   var ResizeManager = giclee.managers.ResizeManager;
-
-
 
   // --------------------------------------------------------------------
   // A display displays a document on a canvas. It is the base of other
@@ -64,30 +62,30 @@
     this.events = giclee.managers.EventManager.create();
 
     // Make sure the div is fixed, relative or absolute positioned.
-    var position = $div.css("position");
+    var position = $div.css('position');
     if (!position || position === 'static' || position === 'inherit') {
-      $div.css("position", "relative");
+      $div.css('position', 'relative');
     }
 
     // Populate the div with a full size canvas. Eventually we may
     // use many of these for render acceleration and
     // caching.
-    this._$canvas = $("<canvas>").css({
-      position: "absolute",
+    this._$canvas = $('<canvas>').css({
+      position: 'absolute',
       left: 0,
       right: 0,
       top: 0,
       bottom: 0
     });
     this.$div.html(this._$canvas);
-    this._c = this._$canvas.get(0).getContext("2d");
+    this._c = this._$canvas.get(0).getContext('2d');
 
     // Register to resize the canvas.
     this._canvasResizeManager = ResizeManager.create(this._$canvas, $div);
     this._canvasResizeManager.events.register(
-      "resize",
+      'resize',
       function(event) {
-        that.events.notify("resize", event);
+        that.events.notify('resize', event);
         that.draw();
       }
     );
@@ -137,20 +135,27 @@
       // Change the event to be a little more platform independent.
 
       // Skip if we have a 2d-scroll and this is the wrong direction.
-      if (event.axis !== undefined &&
-        event.axis === event.HORIZONTAL_AXIS) return;
+      if (event.axis !== undefined && event.axis === event.HORIZONTAL_AXIS) {
+        return;
+      }
 
       // Figure out the scroll.
       var orig = event.originalEvent || window.event;
       var delta = 0;
-      if (orig.wheelDeltaY) delta = orig.wheelDeltaY / 120.0;
-      else {
-        if (orig.wheelDelta) delta = orig.wheelDelta / 120.0;
-        else {
-          if (orig.detail) delta = -orig.detail / 3.0;
+      if (orig.wheelDeltaY) {
+        delta = orig.wheelDeltaY / 120.0;
+      } else {
+        if (orig.wheelDelta) {
+          delta = orig.wheelDelta / 120.0;
+        } else {
+          if (orig.detail) {
+            delta = -orig.detail / 3.0;
+          }
         }
       }
-      if (delta === 0) return;
+      if (delta === 0) {
+        return;
+      }
       event.delta = delta;
       this.editMode.handleMouseWheel(this, event);
     } else {
@@ -198,7 +203,9 @@
    * null as an argument to clear the edit mode.
    */
   Display.setEditMode = function(editMode) {
-    if (editMode === this.editMode) return;
+    if (editMode === this.editMode) {
+      return;
+    }
 
     var that = this;
     this.editMode = editMode;
@@ -261,8 +268,12 @@
   Display.initPos = function(scaleLimit) {
     var document = this.document;
     var content = document.content;
-    if (!content) return;
-    if (scaleLimit === undefined) scaleLimit = 1000.0;
+    if (!content) {
+      return;
+    }
+    if (scaleLimit === undefined) {
+      scaleLimit = 1000.0;
+    }
 
     var ModelFactory = this.options.ModelFactory;
     var posStack = [posCreate()];
@@ -270,13 +281,14 @@
     var aabb = model.getBounds(posStack);
     var xywh = aabb.getXYWH();
 
-    var w = this.$div.width(), h = this.$div.height();
-    var scale = Math.min(scaleLimit, w/xywh[2], h/xywh[3]);
+    var w = this.$div.width();
+    var h = this.$div.height();
+    var scale = Math.min(scaleLimit, w / xywh[2], h / xywh[3]);
 
-    var cx = (aabb.l + aabb.r)*0.5*scale;
-    var cy = (aabb.t + aabb.b)*0.5*scale;
-    this.pos.x = w*0.5 - cx;
-    this.pos.y = h*0.5 - cy;
+    var cx = (aabb.l + aabb.r) * 0.5 * scale;
+    var cy = (aabb.t + aabb.b) * 0.5 * scale;
+    this.pos.x = w * 0.5 - cx;
+    this.pos.y = h * 0.5 - cy;
     this.pos.o = 0.0;
     this.pos.s = scale;
   };
@@ -286,7 +298,8 @@
    */
   Display.draw = function() {
     var c = this._c;
-    var w = this.$div.width(), h = this.$div.height();
+    var w = this.$div.width();
+    var h = this.$div.height();
     var aabb = AABB.create(0, 0, w, h);
 
     c.setTransform(1, 0, 0, 1, 0, 0);
@@ -343,7 +356,6 @@
     return result;
   };
 
-
   // --------------------------------------------------------------------
   // The viewer is a display with a ChangeViewEditMode preset.
   // --------------------------------------------------------------------
@@ -384,8 +396,8 @@
     {}, Display._defaultOptions,
     {
       initPosScale: 0.15,
-      viewBoxColor: "#cc0000",
-      viewBoxHighlight: "white",
+      viewBoxColor: '#cc0000',
+      viewBoxHighlight: 'white',
       draggableBounds: true
     });
 
@@ -409,8 +421,8 @@
     var cos = Math.cos(o);
     var sin = Math.sin(o);
     return giclee.datatypes.posCreate(
-      cos*x - sin*y + this.pos.x,
-      sin*x + cos*y + this.pos.y,
+      cos * x - sin * y + this.pos.x,
+      sin * x + cos * y + this.pos.y,
       o,
       relativeScale
     );
@@ -431,8 +443,8 @@
     var cos = Math.cos(viewBoundsPos.o);
     var sin = Math.sin(viewBoundsPos.o);
     return giclee.datatypes.posCreate(
-      cos*x + sin*y,
-      -sin*x + cos*y,
+      cos * x + sin * y,
+      -sin * x + cos * y,
       this.pos.o - viewBoundsPos.o,
       relativeScale
     );
@@ -454,10 +466,10 @@
     var c = this._c;
     c.save();
     giclee.datatypes.posSetTransform(pos, c);
-    c.lineWidth = 3.0/pos.s;
+    c.lineWidth = 3.0 / pos.s;
     c.strokeStyle = this.options.viewBoxColor;
     c.strokeRect(0, 0, displayElementWidth, displayElementHeight);
-    c.lineWidth = 1.0/pos.s;
+    c.lineWidth = 1.0 / pos.s;
     c.strokeStyle = this.options.viewBoxHighlight;
     c.strokeRect(0, 0, displayElementWidth, displayElementHeight);
     c.restore();
@@ -467,8 +479,8 @@
    * Registers additionally to be told when its associated display changes.
    */
   Overview._initEvents = function() {
-    this.display.events.register("view-changed", this.draw, this);
-    this.display.events.register("resize", this.draw, this);
+    this.display.events.register('view-changed', this.draw, this);
+    this.display.events.register('resize', this.draw, this);
     Display._initEvents.call(this);
   };
 
@@ -485,7 +497,7 @@
 
     var dm = DragManager.create();
     dm.setPos(viewBoundsPos);
-    dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, false);
+    dm.setRotateScaleOrigin({x:w * 0.5, y:h * 0.5}, false);
     dm.setLocks(
       !overview.display.options.canPanView,
       !overview.display.options.canRotateView,
@@ -517,11 +529,13 @@
   };
   _OverviewEditMode.handleMouseWheel = function(overview, event) {
     var display = overview.display;
-    if (!event.delta || !display.options.canScaleView) return;
+    if (!event.delta || !display.options.canScaleView) {
+      return;
+    }
 
     var newScale = Math.pow(1.4, -event.delta);
     var deltaPos = giclee.datatypes.posWithOrigin(
-      {x:display.$div.width()*0.5, y:display.$div.height()*0.5},
+      {x:display.$div.width() * 0.5, y:display.$div.height() * 0.5},
       0.0, newScale
     );
     var pos = giclee.datatypes.posConcat(deltaPos, display.pos);
@@ -534,7 +548,9 @@
   // API
   // --------------------------------------------------------------------
 
-  if (window.giclee === undefined) window.giclee = {};
+  if (window.giclee === undefined) {
+    window.giclee = {};
+  }
   window.giclee.viewer = {
     Display: Display,
     Viewer: Viewer,

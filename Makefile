@@ -1,6 +1,6 @@
-all: sample_css min_version debug_version downloads
+all: sample_css minified debug_version downloads
 
-.PHONY: all sample_css min_version debug_version clean downloads lint
+.PHONY: all sample_css minified debug_version clean downloads lint style check
 
 # ----------------------------------------------------------------------------
 # Sample CSS Generation from LESS files
@@ -42,7 +42,7 @@ ADDITIONAL_MIN = $(addsuffix /$(MIN_NAME), $(ADDITIONAL_DIRS))
 DEBUG_OUT = $(OUT_DIR)/$(DEBUG_NAME)
 ADDITIONAL_DEBUG = $(addsuffix /$(DEBUG_NAME), $(ADDITIONAL_DIRS))
 
-min_version: $(MIN_OUT) $(ADDITIONAL_MIN)
+minified: $(MIN_OUT) $(ADDITIONAL_MIN)
 debug_version: $(DEBUG_OUT) $(ADDITIONAL_DEBUG)
 
 $(OUT_DIR):
@@ -91,11 +91,17 @@ clean:
 	rm -rf $(OUT_DIR)
 
 # ----------------------------------------------------------------------------
-# Linting
+# Linting and Styling
 
 JSHINT = ./node_modules/jshint/bin/jshint
+JSCS = ./node_modules/jscs/bin/jscs
 SAMPLE_JS = $(wildcard samples/resources/js/sample*-client.js)
 TEST_JS = $(wildcard test/tests/*.js)
 
 lint:
 	$(JSHINT) $(SRC_FILES) $(SAMPLE_JS) $(TEST_JS)
+
+style:
+	$(JSCS) $(SRC_FILES) $(SAMPLE_JS) $(TEST_JS)
+
+check: lint style

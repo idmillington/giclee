@@ -1,10 +1,10 @@
-/* 
- * 
+/*
+ * Editing modes allow document content to be modified, by issuing commands.
  */
 /*jshint indent:2 */
 (function() {
-  "use strict";
-  
+  'use strict';
+
   // Import
   var ObjectBase = giclee.utils.ObjectBase;
   var DragManager = giclee.managers.DragManager;
@@ -66,17 +66,18 @@
   // An edit mode for panning and scaling the canvas.
   // --------------------------------------------------------------------
 
-  ChangeViewEditMode = EditModeBase.extend();
+  var ChangeViewEditMode = EditModeBase.extend();
 
   /**
    * Handles a touch by registering for updates on the associated canvas.
    */
   ChangeViewEditMode.handleTouch = function(display, event) {
-    var w = display.$div.width(), h = display.$div.height();
+    var w = display.$div.width();
+    var h = display.$div.height();
 
     var dm = DragManager.create();
     dm.setPos(display.pos);
-    dm.setRotateScaleOrigin({x:w*0.5, y:h*0.5}, true);
+    dm.setRotateScaleOrigin({x:w * 0.5, y:h * 0.5}, true);
     dm.setLocks(
       !display.options.canPanView,
       !display.options.canRotateView,
@@ -109,40 +110,43 @@
    * Handles scrolling the mouse by zooming.
    */
   ChangeViewEditMode.handleMouseWheel = function(display, event) {
-      if (!event.delta || !display.options.canScaleView) return;
+    if (!event.delta || !display.options.canScaleView) {
+      return;
+    }
 
-      var newScale = Math.pow(1.4, event.delta);
-      // TODO: Limit the scale?
+    var newScale = Math.pow(1.4, event.delta);
+    // TODO: Limit the scale?
 
-      // Figure out where the mouse is.
-      var x,y;
-      if (event.offsetX !== undefined && event.offsetY !== undefined) {
-        x = event.offsetX;
-        y = event.offsetY;
-      } else {
-        x = display.$div.width()*0.5;
-        y = display.$div.height()*0.5;
-      }
+    // Figure out where the mouse is.
+    var x;
+    var y;
+    if (event.offsetX !== undefined && event.offsetY !== undefined) {
+      x = event.offsetX;
+      y = event.offsetY;
+    } else {
+      x = display.$div.width() * 0.5;
+      y = display.$div.height() * 0.5;
+    }
 
-      // Create a transform based on the center and scale.
-      var deltaPos = giclee.datatypes.posWithOrigin({x:x, y:y}, 0.0, newScale);
-      var pos = giclee.datatypes.posConcat(deltaPos, display.pos);
-      display.setPos(pos);
+    // Create a transform based on the center and scale.
+    var deltaPos = giclee.datatypes.posWithOrigin({x:x, y:y}, 0.0, newScale);
+    var pos = giclee.datatypes.posConcat(deltaPos, display.pos);
+    display.setPos(pos);
 
-      return true;
+    return true;
   };
 
   // --------------------------------------------------------------------
   // Delegates to a priority ordered list of edit modes.
   // --------------------------------------------------------------------
 
-  DelegateEditMode = EditModeBase.extend();
+  var DelegateEditMode = EditModeBase.extend();
 
   /**
    * Pass a list of delegates to the constructor.
    */
   DelegateEditMode.init = function(delegates) {
-  this.delegates = delegates;
+    this.delegates = delegates;
   };
 
   var _delegate = function(fnName) {
@@ -182,12 +186,13 @@
   // API
   // --------------------------------------------------------------------
 
-  if (window.giclee === undefined) window.giclee = {};
+  if (window.giclee === undefined) {
+    window.giclee = {};
+  }
   window.giclee.edit = {
     EditModeBase: EditModeBase,
     ChangeViewEditMode: ChangeViewEditMode,
     DelegateEditMode: DelegateEditMode
   };
-
 
 }());

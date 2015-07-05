@@ -1,9 +1,9 @@
-/* 
- * 
+/*
+ * Systems that provide services for loading, managing and calculating.
  */
 /*jshint indent:2 */
 (function($) {
-  "use strict";
+  'use strict';
 
   // Import
   var ObjectBase = giclee.utils.ObjectBase;
@@ -51,10 +51,12 @@
    */
   EventManager.deregister = function(eventName, callback, thisPointer) {
     var listeners = this.listeners[eventName];
-    if (listeners === undefined) return;
+    if (listeners === undefined) {
+      return;
+    }
     for (var i = 0; i < listeners.length; i ++) {
       var record = listeners[i];
-      if (record.callback===callback && record.context===thisPointer) {
+      if (record.callback === callback && record.context === thisPointer) {
         listeners.splice(i, 1);
         return;
       }
@@ -174,7 +176,7 @@
 
     // If we're the last one we're looking for, send the event.
     if ($.isEmptyObject(this.waitingFor)) {
-      this.events.notify("loaded");
+      this.events.notify('loaded');
     }
   };
 
@@ -218,9 +220,12 @@
 
     // Find the transfer.
     var dataTransfer = event.originalEvent.dataTransfer;
-    if ($.browser.webkit) dataTransfer.dropEffect = "copy";
-    if (!dataTransfer || !dataTransfer.files ||
-        !dataTransfer.files.length) return;
+    if ($.browser.webkit) {
+      dataTransfer.dropEffect = 'copy';
+    }
+    if (!dataTransfer || !dataTransfer.files || !dataTransfer.files.length) {
+      return;
+    }
 
     // Extract the files in turn.
     var that = this;
@@ -234,8 +239,8 @@
         // Throws the event when the image is built
         // (should be pretty much instant).
         image.onload = function() {
-          var filename = file.name?file.name:file.fileName;
-          this.events.notify("image", filename);
+          var filename = file.name ? file.name : file.fileName;
+          this.events.notify('image', filename);
         };
 
         // Start the transfer.
@@ -295,7 +300,7 @@
       this.lastSize.w = w;
       this.lastSize.h = h;
       this._resized(w, h);
-      this.events.notify("resize", {width:w, height:h});
+      this.events.notify('resize', {width:w, height:h});
     }
   };
 
@@ -318,7 +323,6 @@
     var that = this;
     setInterval(function() { that._checkResize(); }, 150);
   };
-
 
   // --------------------------------------------------------------------
   // A resize manager keeps a target the same size as a container.
@@ -344,7 +348,6 @@
     var wh = {width: w, height: h};
     this.$resize.width(w).height(h).attr(wh).css(wh);
   };
-
 
   // --------------------------------------------------------------------
   // A drag manager allows dragging to affect a POS.
@@ -425,13 +428,15 @@
    * Processes the single touch as a position change.
    */
   DragManager._updatePosition = function() {
-    if (this.lockPosition) return;
+    if (this.lockPosition) {
+      return;
+    }
 
     for (var id in this.touchLookup) {
       var touchData = this.touchLookup[id];
       var initial = this.initialPos;
-      var deltaX = touchData.current.x-touchData.initial.x;
-      var deltaY = touchData.current.y-touchData.initial.y;
+      var deltaX = touchData.current.x - touchData.initial.x;
+      var deltaY = touchData.current.y - touchData.initial.y;
       this.pos.x = initial.x + deltaX;
       this.pos.y = initial.y + deltaY;
 
@@ -445,13 +450,15 @@
    * Processes the single touch as an orientation/scale change.
    */
   DragManager._updateOrientationScale = function() {
-    if (this.lockOrientation && this.lockScale) return;
+    if (this.lockOrientation && this.lockScale) {
+      return;
+    }
 
     for (var id in this.touchLookup) {
-    var touchData = this.touchLookup[id];
+      var touchData = this.touchLookup[id];
 
-    // Figure out change in origin.
-    var currentOsOrigin;
+      // Figure out change in origin.
+      var currentOsOrigin;
       if (this.osOriginIsGlobal) {
         currentOsOrigin = this.osOrigin;
       } else {
@@ -476,7 +483,9 @@
    * Processes the double touch.
    */
   DragManager._updatePositionOrientationScale = function() {
-    if (this.lockPosition && this.lockOrientation && this.lockScale) return;
+    if (this.lockPosition && this.lockOrientation && this.lockScale) {
+      return;
+    }
 
     var touches = [];
     for (var id in this.touchLookup) {
@@ -580,7 +589,9 @@
   // API
   // --------------------------------------------------------------------
 
-  if (window.giclee === undefined) window.giclee = {};
+  if (window.giclee === undefined) {
+    window.giclee = {};
+  }
   window.giclee.managers = {
     EventManager: EventManager,
     ImageManager: ImageManager,

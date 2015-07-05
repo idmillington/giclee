@@ -1,9 +1,9 @@
-/* 
- * 
+/*
+ * Shims and polyfills for different browsers.
  */
 /*jshint indent:2 */
 (function($) {
-  "use strict";
+  'use strict';
 
   /**
    * We use the console system for feedback (e.g. warnings when
@@ -49,7 +49,7 @@
    */
   (function() {
     // Create a temporary canvas.
-    var c = document.createElement("canvas").getContext("2d");
+    var c = document.createElement('canvas').getContext('2d');
     c.translate(50, 0);
     c.moveTo(125, 50);
     c.arc(100, 50, 25, 0, 360, false);
@@ -60,7 +60,7 @@
       var original = proto.isPointInPath;
       proto.isPointInPath = function(x, y) {
         this.save();
-        this.setTransform(1,0, 0,1, 0,0);
+        this.setTransform(1, 0, 0, 1, 0, 0);
         var result = original.call(this, x, y);
         this.restore();
         return result;
@@ -81,8 +81,7 @@
     var filter = $.event.mouseHooks.filter;
     $.event.mouseHooks.filter = function(event, original) {
       event = filter(event, original);
-      if (typeof event.offsetX === "undefined" ||
-        typeof event.offsetY === "undefined") {
+      if (event.offsetX === undefined || event.offsetY === undefined) {
         var targetOffset = $(event.target).offset();
         event.offsetX = event.pageX - targetOffset.left;
         event.offsetY = event.pageY - targetOffset.top;

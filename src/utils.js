@@ -1,9 +1,9 @@
-/* 
- * 
+/*
+ * Object-oriented base class, and utility functions.
  */
 /*jshint indent:2 */
 (function() {
-  "use strict";
+  'use strict';
 
   // ----------------------------------------------------------------------
   // Object orientation
@@ -17,8 +17,8 @@
     /**
      * Constructs a new instance of this (or a derived) object,
      * calling an 'init' method with the same arguments passed to
-     * the constructor. So "DerivedObject.create(...)" replaces
-     * "new DerivedObject(...)". Note that 'init' functions do not
+     * the constructor. So 'DerivedObject.create(...)' replaces
+     * 'new DerivedObject(...)'. Note that 'init' functions do not
      * get called up the chain automatically, derived objects
      * should explicitly call any parent init functions they need.
      */
@@ -86,7 +86,7 @@
     // implementation dependent.
     var toRemove = [];
     for (var key in target) {
-      if (key.substring(0,1) === '-') {
+      if (key.substring(0, 1) === '-') {
         toRemove.push(key);
       }
     }
@@ -113,10 +113,12 @@
   var uuid4 = function() {
     return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(
         /[xy]/g, function(c) {
-          var r = Math.floor(Math.random()*16);
+          var r = Math.floor(Math.random() * 16);
           // The 'y' nibble is binary 10xx with only the
           // last two random digits.
-          if (c === 'y') r = r & 0x3 | 0x8;
+          if (c === 'y') {
+            r = r & 0x3 | 0x8;
+          }
           return r.toString(16);
         }
     );
@@ -126,14 +128,14 @@
    * Normalizes the given string into utf8 encoding.
    */
   var utf8encode = function(string) {
-    string = string.replace(/\r\n/g,"\n");
-    var result = "";
+    string = string.replace(/\r\n/g, '\n');
+    var result = '';
 
     for (var n = 0; n < string.length; n++) {
       var c = string.charCodeAt(n);
       if (c < 128) {
         result += String.fromCharCode(c);
-      } else if((c > 127) && (c < 2048)) {
+      } else if ((c > 127) && (c < 2048)) {
         result += String.fromCharCode((c >> 6) | 192);
         result += String.fromCharCode((c & 63) | 128);
       } else {
@@ -229,7 +231,10 @@
   // API
   // --------------------------------------------------------------------
 
-  if (window.giclee === undefined) window.giclee = {};
+  if (window.giclee === undefined) {
+    window.giclee = {};
+  }
+
   window.giclee.utils = {
     ObjectBase: ObjectBase,
 

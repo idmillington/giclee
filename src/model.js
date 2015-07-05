@@ -1,9 +1,9 @@
-/* 
- * 
+/*
+ * A model is the visual appearance of part of the document.
  */
 /*jshint indent:2 */
 (function($) {
-  "use strict";
+  'use strict';
 
   // Import
   var ObjectBase = giclee.utils.ObjectBase;
@@ -23,10 +23,9 @@
   // --------------------------------------------------------------------
   var ModelFactory = ObjectBase.extend();
 
-  ModelFactory.init = function(modelProperty)
-  {
-    this.modelProperty = modelProperty || "-model";
-    this.typeMapping = {"group":GroupModel, "_default":Model};
+  ModelFactory.init = function(modelProperty) {
+    this.modelProperty = modelProperty || '-model';
+    this.typeMapping = {'group':GroupModel, '_default':Model};
   };
 
   /**
@@ -80,7 +79,9 @@
           // See if we have a valid model class.
           var ModelClass = this.typeMapping[element.type];
           if (ModelClass === undefined) {
-            console.warn("Type: '"+type+"' has no Model class, using default.");
+            console.warn(
+              'Type: "' + type + '" has no Model class, using default.'
+            );
             ModelClass = this.typeMapping._default;
           }
 
@@ -195,7 +196,7 @@
    */
   Model._drawBounds = function(c, bounds) {
     c.save();
-    c.strokeStyle = "black";
+    c.strokeStyle = 'black';
 
     c.setTransform(1, 0, 0, 1, 0, 0);
     var xywh = bounds.getXYWH();
@@ -231,7 +232,7 @@
    */
   Model._renderLocalCoords = function(c, posStack, globalBounds, options) {
     // The base implemenation draws a black placeholder-rectangle.
-    c.fillStyle = "black";
+    c.fillStyle = 'black';
     c.fillRect(-50, -50, 100, 100);
   };
 
@@ -251,7 +252,8 @@
    * isPointInObject().
    */
   Model._isLocalPointInObject = function(c, posStack, localPoint) {
-    var x = localPoint.x, y = localPoint.y;
+    var x = localPoint.x;
+    var y = localPoint.y;
     return x > -50 && x < 50 && y > -50 && y < 50;
   };
 
@@ -265,8 +267,11 @@
    * Returns the children to recurse into.
    */
   GroupModel.getChildren = function() {
-    if ($.isArray(this.element)) return this.element;
-    else return this.element.children;
+    if ($.isArray(this.element)) {
+      return this.element;
+    } else {
+      return this.element.children;
+    }
   };
 
   /**
@@ -312,8 +317,7 @@
   /**
    * Renders the child objects.
    */
-  GroupModel._renderLocalCoords = function(c, posStack, globalBounds, options)
-  {
+  GroupModel._renderLocalCoords = function(c, posStack, globalBounds, options) {
     var children = this.getChildren();
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
@@ -326,7 +330,9 @@
   // API
   // --------------------------------------------------------------------
 
-  if (window.giclee === undefined) window.giclee = {};
+  if (window.giclee === undefined) {
+    window.giclee = {};
+  }
   window.giclee.model = {
     ModelFactory: ModelFactory,
     Model: Model

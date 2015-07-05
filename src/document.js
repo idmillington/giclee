@@ -1,10 +1,10 @@
-/* 
- * 
+/*
+ * The document holds the data we're editing.
  */
 /*jshint indent:2 */
 (function() {
-  "use strict";
-  
+  'use strict';
+
   // Import
   var ObjectBase = giclee.utils.ObjectBase;
 
@@ -43,7 +43,7 @@
   // Command handlers that send out events when something changes.
   // --------------------------------------------------------------------
 
-  EventGeneratingCommandHandler = CommandHandler.extend();
+  var EventGeneratingCommandHandler = CommandHandler.extend();
 
   /**
    * A command handler that keeps a list of listeners, and will
@@ -92,7 +92,7 @@
    * Removes the given callback from the list of listeners.
    */
   EventGeneratingCommandHandler.removeListener = function(listener) {
-    for (var i = this.listeners.length-1; i >= 0; --i) {
+    for (var i = this.listeners.length - 1; i >= 0; --i) {
       if (this.listeners[i] === listener) {
         this.listeners.splice(i, 1);
       }
@@ -112,7 +112,9 @@
    * Creates a new document with the given raw content.
    */
   Document.init = function(content) {
-    if (content === undefined) content = {};
+    if (content === undefined) {
+      content = {};
+    }
     this.content = content;
   };
 
@@ -120,7 +122,9 @@
   // API
   // --------------------------------------------------------------------
 
-  if (window.giclee === undefined) window.giclee = {};
+  if (window.giclee === undefined) {
+    window.giclee = {};
+  }
   window.giclee.document = {
     CommandHandler: CommandHandler,
     EventGeneratingCommandHandler: EventGeneratingCommandHandler,

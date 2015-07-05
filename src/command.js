@@ -1,10 +1,10 @@
-/* 
- * 
+/*
+ * Commands are undo/redoable actions that encapsulate all document changes.
  */
 /*jshint indent:2 */
 (function() {
-  "use strict";
-  
+  'use strict';
+
   // Import
   var ObjectBase = giclee.utils.ObjectBase;
 
@@ -58,7 +58,9 @@
   // API
   // --------------------------------------------------------------------
 
-  if (window.giclee === undefined) window.giclee = {};
+  if (window.giclee === undefined) {
+    window.giclee = {};
+  }
   window.giclee.command = {
     CommandBase: CommandBase
   };
