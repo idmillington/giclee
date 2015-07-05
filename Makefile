@@ -25,7 +25,8 @@ sample_css: $(SAMPLE_CSS) $(COMMON_SAMPLE_CSS)
 # the javascript files in order here, since they have internal
 # dependencies.
 
-SRC_FILES = src/utils.js src/datatypes.js src/document.js src/managers.js \
+SRC_FILES = src/compatability.js src/utils.js src/datatypes.js \
+	src/document.js src/managers.js \
 	src/model.js src/edit.js src/viewer.js
 
 MIN_NAME = giclee.min.js
@@ -92,7 +93,7 @@ clean:
 # ----------------------------------------------------------------------------
 # Linting
 
-JSHINT = ./node_modules/jshint/bin/hint
+JSHINT = ./node_modules/jshint/bin/jshint
 SAMPLE_JS = $(wildcard samples/resources/js/sample*-client.js)
 TEST_JS = $(wildcard test/tests/*.js)
 
