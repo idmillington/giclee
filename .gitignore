@@ -1,0 +1,10 @@
+# Node installed libraries
+node_modules/
+
+# Giclee javascript are minified and combined from the source.
+giclee.js
+giclee.min.js
+
+# Jquery is downloaded as needed.
+jquery.js
+jquery.min.js

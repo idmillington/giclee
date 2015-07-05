@@ -1,0 +1,2 @@
+# Styles are written in less, these are compiled versions.
+resources/css/*.css
